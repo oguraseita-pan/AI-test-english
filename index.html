@@ -336,11 +336,11 @@ body{
         <div class="mt"><b class="jp">Speaking 分析</b><small class="jp">音読・リテル・自由発話 / 約4分・要マイク</small></div>
         <div class="go mono">→</div>
       </button>
-      <div class="mode soon">
+      <button class="mode ready" onclick="startFull()">
         <div class="idx mono">03</div>
-        <div class="mt"><b class="jp">Full Diagnostic</b><small class="jp">Reading + Speaking / 総合レポート</small></div>
-        <div class="pill">準備中</div>
-      </div>
+        <div class="mt"><b class="jp">Full Diagnostic</b><small class="jp">Reading + Speaking / 総合レポート・約11分</small></div>
+        <div class="go mono">→</div>
+      </button>
     </div>
     <div class="homefoot">
       <div id="lastResult" class="last mono"></div>
@@ -499,6 +499,74 @@ body{
       <button class="btn ghost jp" onclick="goHome()">ホームに戻る</button>
     </div>
     <p class="fine">SIMPLIFIED ESTIMATE · PRONUNCIATION SCORED VIA TRANSCRIPTION PROXY</p>
+  </section>
+
+  <!-- ================= FULL: INTRO ================= -->
+  <section id="full_intro" class="screen">
+    <div class="testbar">
+      <button class="back" onclick="goHome()" aria-label="やめる">✕</button>
+      <div class="rev-title jp">Full Diagnostic</div>
+    </div>
+    <div class="sp-intro">
+      <div class="eyebrow">READING + SPEAKING · ~11 MIN</div>
+      <h2 class="jp">4技能の土台を、一度で。</h2>
+      <p class="jp">Reading（語彙・熟語・文法／50問）と Speaking（音読・リテル・自由発話）を続けて受け、受容と産出の両面から総合CEFRを出します。</p>
+      <ol class="sp-tasks">
+        <li><b class="mono">Ⅰ</b><div><b class="jp">Reading 分析</b><small class="jp">全50問・完全ローカル（〜7分）</small></div></li>
+        <li><b class="mono">Ⅱ</b><div><b class="jp">Speaking 分析</b><small class="jp">3タスク・要マイク（〜4分）</small></div></li>
+      </ol>
+      <p class="sp-mic jp">🎙 後半でマイクを使います。途中保存はされないので、続けて受けてください。</p>
+    </div>
+    <div class="actions">
+      <button class="btn primary jp" onclick="launchReading()">はじめる</button>
+    </div>
+  </section>
+
+  <!-- ================= FULL: REPORT ================= -->
+  <section id="full" class="screen">
+    <div class="brand"><div class="mark"></div><b>English&nbsp;Lab</b><span class="tag">full report</span></div>
+    <div class="rep-head">
+      <div class="lbl">Full Diagnostic</div>
+      <div class="date mono" id="fuDate"></div>
+    </div>
+    <div class="overall">
+      <div class="cefr mono" id="fuCefr">B1<small id="fuPlus"></small></div>
+      <div class="meta"><div class="name jp" id="fuName"></div><div class="sub jp">総合CEFR（Reading + Speaking）</div></div>
+    </div>
+
+    <div class="spectrum">
+      <div class="axis">
+        <div class="grid"><span>A1</span><span>A2</span><span>B1</span><span>B2</span><span>C1</span></div>
+        <div class="needle" id="fuNeedle" style="left:50%"></div>
+      </div>
+      <div class="plots" id="fuPlots"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="cell hl"><b class="mono" id="fuScore">—</b><small>LAB SCORE</small></div>
+      <div class="cell"><b class="mono" id="fuRead">—</b><small>READING</small></div>
+      <div class="cell"><b class="mono" id="fuSpeak">—</b><small>SPEAKING</small></div>
+    </div>
+
+    <div id="fuDemoBadge" class="sp-demo" style="display:none">Speaking は DEMO 評価です（API未接続）</div>
+
+    <div class="sec-h">Reading — 受容</div>
+    <div class="skills" id="fuReadDims"></div>
+
+    <div class="sec-h" style="margin-top:20px">Speaking — 産出</div>
+    <div class="skills" id="fuSpeakDims"></div>
+
+    <div class="findings" id="fuFindings">
+      <h3>所見 / Findings</h3>
+      <p id="fuSummary"></p>
+    </div>
+
+    <div class="actions">
+      <button class="btn ghost jp" onclick="openReview()">Readingの解答を振り返る</button>
+      <button class="btn primary jp" onclick="startFull()">もう一度受ける</button>
+      <button class="btn ghost jp" onclick="goHome()">ホームに戻る</button>
+    </div>
+    <p class="fine">SIMPLIFIED ESTIMATE · NOT AN OFFICIAL CEFR CERTIFICATION</p>
   </section>
 
 </div>
@@ -822,10 +890,13 @@ function buildQuiz(){
     ...pickGrammar(POOL.grammar,PLAN.grammar),
   ].map(shuffleChoices);
 }
-function startTest(){
+let runMode='reading', fullReading=null, fullSpeaking=null;
+function launchReading(){
   quiz=buildQuiz(); idx=0; answers=new Array(quiz.length);
   show('test'); t0=Date.now(); startTimer(); renderQ();
 }
+function startTest(){ runMode='reading'; launchReading(); }
+function startFull(){ runMode='full'; spDemo=false; show('full_intro'); }
 function startTimer(){
   clearInterval(timerId);
   timerId=setInterval(()=>{
@@ -987,7 +1058,9 @@ function finish(){
   const res=grade();
   renderResult(res,elapsed);
   saveResult(res,elapsed);
-  show('result'); window.scrollTo(0,0);
+  fullReading=res;
+  if(runMode==='full'){ show('speak_intro'); }
+  else { show('result'); window.scrollTo(0,0); }
 }
 const fmtLv=lv=> lv==='Pre-A1' ? 'Pre-A1' : (lv&&lv.endsWith('-') ? lv.slice(0,-1)+'手前' : lv);
 const posPct=cont=>Math.max(3,Math.min(97,((cont-1)/4)*100)); // 1..5 → 0..100
@@ -1107,7 +1180,7 @@ const SPEAK_DATA=[
 let spTasks=[], spIdx=0, spResults=[], spDemo=false;
 let mediaRecorder=null, audioChunks=[], recStream=null, recStart=0, recTimer=null, recBlob=null, recURL=null;
 
-function startSpeaking(){ spDemo=false; show('speak_intro'); }
+function startSpeaking(){ runMode='speaking'; spDemo=false; show('speak_intro'); }
 function beginSpeaking(){
   spTasks=SPEAK_DATA.map(t=>({...t, item:t.items[Math.floor(Math.random()*t.items.length)]}));
   spIdx=0; spResults=[]; show('speak'); renderTask();
@@ -1281,6 +1354,7 @@ async function runEvaluation(){
 }
 
 function renderSpeakReport(d){
+  fullSpeaking=d;
   document.getElementById('spDate').textContent=new Date().toISOString().slice(0,10).replace(/-/g,'.');
   document.getElementById('spCefr').textContent=d.overallCEFR||'—';
   document.getElementById('spName').textContent=CEFR_NAME[d.overallCEFR]||'';
@@ -1333,7 +1407,68 @@ function renderSpeakReport(d){
     T.appendChild(el);
   });
 
+  if(runMode==='full'){ renderFull(); return; }
   show('speak_report'); window.scrollTo(0,0);
+}
+
+/* ---------- Full Diagnostic 総合レポート ---------- */
+function renderFull(){
+  const r=fullReading, s=fullSpeaking;
+  if(!r||!s){ show('speak_report'); return; }
+  document.getElementById('fuDate').textContent=new Date().toISOString().slice(0,10).replace(/-/g,'.');
+  const rNum=r.contAvg, sNum=BAND_NUM[s.overallCEFR]||3;
+  const combNum=(rNum+sNum)/2;
+  const combBand=combNum<1?'Pre-A1':NUM_BAND[Math.max(1,Math.min(5,Math.round(combNum)))];
+  const combPlus=(combNum-Math.round(combNum))>=0.4 && combNum<5;
+  document.getElementById('fuCefr').firstChild.textContent=combBand;
+  document.getElementById('fuPlus').textContent=combPlus?'+':'';
+  document.getElementById('fuName').textContent=CEFR_NAME[combBand]||'';
+  document.getElementById('fuScore').textContent=Math.round(((r.score||0)+(s.overallScore||0))/2);
+  document.getElementById('fuRead').textContent=r.ovBand+(r.ovPlus?'+':'');
+  document.getElementById('fuSpeak').textContent=s.overallCEFR||'—';
+  document.getElementById('fuDemoBadge').style.display=spDemo?'block':'none';
+
+  // spectrum: combined needle + R/S plots
+  const needle=document.getElementById('fuNeedle');
+  requestAnimationFrame(()=>setTimeout(()=>{needle.style.left=posPct(combNum)+'%';},80));
+  const plots=document.getElementById('fuPlots'); plots.innerHTML='';
+  [['R',rNum],['S',sNum]].forEach(([lab,n],i)=>{
+    const p=document.createElement('div'); p.className='plot'; p.style.left='50%';
+    p.innerHTML=`<i></i><span>${lab}</span>`;
+    plots.appendChild(p);
+    requestAnimationFrame(()=>setTimeout(()=>{p.style.left=posPct(n)+'%';},120+i*60));
+  });
+
+  // Reading dims
+  const rd=document.getElementById('fuReadDims'); rd.innerHTML='';
+  const rn={word:'語彙',idiom:'熟語',grammar:'文法'};
+  ['word','idiom','grammar'].forEach(k=>{
+    const sk=r.skills[k], fill=((sk.cont-1)/4)*100;
+    const el=document.createElement('div'); el.className='skill';
+    el.innerHTML=`<div class="top"><div class="nm jp">${rn[k]}<em>${Math.round(sk.acc*100)}% 正答</em></div>
+      <div class="lv mono">${fmtLv(sk.level)}<small>${sk.plus?'+':''}</small></div></div>
+      <div class="meter"><i data-w="${Math.max(3,Math.min(100,fill))}"></i></div>`;
+    rd.appendChild(el);
+  });
+  // Speaking dims
+  const sd=document.getElementById('fuSpeakDims'); sd.innerHTML='';
+  ['発音','流暢さ','文法','語彙','一貫性'].forEach(name=>{
+    const dm=(s.dimensions&&s.dimensions[name])||{cefr:'—',score:0};
+    const el=document.createElement('div'); el.className='skill';
+    el.innerHTML=`<div class="top"><div class="nm jp">${name}</div>
+      <div class="lv mono">${dm.cefr||'—'}</div></div>
+      <div class="meter"><i data-w="${Math.max(3,Math.min(100,dm.score||0))}"></i></div>`;
+    sd.appendChild(el);
+  });
+  requestAnimationFrame(()=>setTimeout(()=>{
+    document.querySelectorAll('#fuReadDims .meter i,#fuSpeakDims .meter i').forEach(i=>i.style.width=i.dataset.w+'%');
+  },160));
+
+  document.getElementById('fuSummary').textContent = s.summary
+    ? `${s.summary}（Reading ${r.ovBand} / Speaking ${s.overallCEFR}）`
+    : `Reading ${r.ovBand} / Speaking ${s.overallCEFR}。受容と産出のバランスから学習を組み立てましょう。`;
+
+  show('full'); window.scrollTo(0,0);
 }
 
 /* ---------- helpers ---------- */
