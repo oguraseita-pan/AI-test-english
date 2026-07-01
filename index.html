@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#14151c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>English Lab — 英語力分析</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   ENGLISH LAB
+   world: a language diagnostics lab. Clinical, precise,
+   data-forward. Signature = the CEFR spectrum readout.
+   type: IBM Plex Mono (data) / Sans (body) / Noto JP.
+   palette: graphite ink, lab paper, indigo primary,
+            coral "signal" for the reading.
+   ========================================================= */
+:root{
+  --paper:#f4f4f1;
+  --paper-2:#eceae4;
+  --card:#ffffff;
+  --ink:#1a1c22;
+  --ink-2:#565a66;
+  --ink-3:#9096a0;
+  --line:#e2e0d8;
+  --line-2:#d3d1c8;
+  --indigo:#4a45c9;
+  --indigo-2:#6b66e0;
+  --coral:#f0503c;
+  --coral-2:#ff6a55;
+  --ok:#2f9e6e;
+  /* spectrum band tints */
+  --sp-a1:#c7cbd6; --sp-a2:#8f96e0; --sp-b1:#6a63dd; --sp-b2:#4a45c9; --sp-c1:#2c288f;
+  --shadow:0 1px 2px rgba(20,22,30,.05),0 6px 20px rgba(20,22,30,.06);
+  --shadow-lg:0 2px 5px rgba(20,22,30,.08),0 16px 40px rgba(20,22,30,.12);
+  --r:14px; --maxw:460px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#101118; --paper-2:#171922; --card:#1a1c26; --ink:#eef0f5;
+    --ink-2:#a4aab8; --ink-3:#6a7080; --line:#282b38; --line-2:#333748;
+    --indigo:#7f7af0; --indigo-2:#9a96f5; --coral:#ff6552; --coral-2:#ff7d6b;
+    --sp-a1:#3a3e4d; --sp-a2:#4a4795; --sp-b1:#6a63dd; --sp-b2:#8b86f0; --sp-c1:#b6b2f8;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.4);
+    --shadow-lg:0 2px 5px rgba(0,0,0,.45),0 16px 40px rgba(0,0,0,.55);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:"IBM Plex Sans","Noto Sans JP",system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.6;
+  -webkit-font-smoothing:antialiased;overscroll-behavior-y:none;
+}
+.jp{font-family:"Noto Sans JP","IBM Plex Sans",sans-serif}
+.mono{font-family:"IBM Plex Mono",monospace;font-feature-settings:"tnum" 1;font-variant-numeric:tabular-nums}
+.wrap{max-width:var(--maxw);margin:0 auto;min-height:100%;
+  padding:max(18px,env(safe-area-inset-top)) 20px calc(26px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column}
+
+.screen{display:none;flex:1;flex-direction:column;animation:fade .3s ease}
+.screen.active{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- brand ---------- */
+.brand{display:flex;align-items:center;gap:10px}
+.brand .mark{width:28px;height:28px;flex:none;position:relative;border:2px solid var(--ink);border-radius:6px;display:grid;place-items:center}
+.brand .mark::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 3px color-mix(in srgb,var(--coral) 22%,transparent)}
+.brand b{font-family:"IBM Plex Mono";font-weight:600;letter-spacing:.02em;font-size:.98rem}
+.brand .tag{margin-left:auto;font-family:"IBM Plex Mono";font-size:.6rem;font-weight:500;letter-spacing:.22em;color:var(--ink-3);text-transform:uppercase}
+
+/* ---------- home ---------- */
+.hero{margin:34px 0 26px}
+.eyebrow{font-family:"IBM Plex Mono";font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;color:var(--coral);margin-bottom:14px}
+.hero h1{font-family:"IBM Plex Sans";font-weight:600;font-size:2.05rem;line-height:1.14;letter-spacing:-.02em}
+.hero h1 .u{background:linear-gradient(transparent 62%,color-mix(in srgb,var(--indigo) 26%,transparent) 62%)}
+.hero p{color:var(--ink-2);font-size:.9rem;margin-top:14px;max-width:33ch}
+
+.specimen{display:flex;gap:1px;margin-top:20px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--line)}
+.specimen div{flex:1;background:var(--card);padding:10px 6px;text-align:center}
+.specimen div b{font-family:"IBM Plex Mono";font-size:1.05rem;font-weight:600;display:block}
+.specimen div small{font-size:.6rem;color:var(--ink-3);letter-spacing:.08em}
+
+.modes{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.mode{display:flex;align-items:center;gap:14px;text-align:left;width:100%;font:inherit;color:inherit;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;
+  box-shadow:var(--shadow);cursor:pointer;position:relative;
+  transition:transform .14s ease,border-color .18s ease,box-shadow .2s ease}
+.mode:active{transform:scale(.985)}
+.mode.ready:hover{border-color:var(--indigo);box-shadow:var(--shadow-lg)}
+.mode .idx{font-family:"IBM Plex Mono";font-size:.7rem;font-weight:600;color:var(--ink-3);width:26px;flex:none}
+.mode .mt{flex:1;min-width:0}
+.mode .mt b{font-size:.98rem;font-weight:600;letter-spacing:-.01em}
+.mode .mt small{display:block;color:var(--ink-3);font-size:.74rem;margin-top:1px}
+.mode .go{font-family:"IBM Plex Mono";color:var(--indigo);font-size:1rem}
+.mode.soon{opacity:.55;cursor:default}
+.pill{font-family:"IBM Plex Mono";font-size:.58rem;font-weight:600;letter-spacing:.12em;color:var(--ink-3);
+  border:1px solid var(--line-2);border-radius:99px;padding:3px 9px;white-space:nowrap}
+
+.homefoot{margin-top:auto;padding-top:24px}
+.homefoot .last{display:none;background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:11px 14px;font-size:.76rem;color:var(--ink-2);margin-bottom:12px}
+.homefoot .last b{font-family:"IBM Plex Mono";color:var(--indigo)}
+.homefoot .copy{color:var(--ink-3);font-size:.66rem;text-align:center;font-family:"IBM Plex Mono";letter-spacing:.06em}
+
+/* ---------- test ---------- */
+.testbar{display:flex;align-items:center;gap:12px}
+.testbar .back{background:none;border:none;color:var(--ink-3);font-size:1.4rem;cursor:pointer;line-height:1;padding:2px 4px}
+.progress{flex:1;height:5px;background:var(--paper-2);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--indigo);border-radius:99px;transition:width .3s cubic-bezier(.4,0,.2,1)}
+.timer{font-family:"IBM Plex Mono";font-weight:500;font-size:.8rem;color:var(--ink-2);min-width:42px;text-align:right}
+
+.qmeta{display:flex;align-items:center;gap:10px;margin:24px 0 12px}
+.qmeta .n{font-family:"IBM Plex Mono";font-weight:600;color:var(--ink-3);font-size:.76rem}
+.qmeta .sec{font-family:"IBM Plex Mono";font-size:.64rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  padding:3px 10px;border-radius:5px;background:var(--paper-2);color:var(--ink-2)}
+
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px 20px;
+  box-shadow:var(--shadow);text-align:center;margin-bottom:18px}
+.qcard .lead{font-size:.76rem;color:var(--ink-3);margin-bottom:14px;font-family:"Noto Sans JP"}
+.qcard .headword{font-family:"IBM Plex Mono";font-weight:600;font-size:1.95rem;letter-spacing:-.01em;line-height:1.2;word-break:break-word}
+.qcard .sentence{font-family:"IBM Plex Mono";font-weight:500;font-size:1.22rem;line-height:1.55;letter-spacing:-.005em}
+.qcard .blank{color:var(--coral);border-bottom:2px solid var(--coral);padding:0 16px;margin:0 3px}
+
+.choices{display:flex;flex-direction:column;gap:9px}
+.choice{display:flex;align-items:center;gap:12px;text-align:left;width:100%;font:inherit;color:inherit;
+  background:var(--card);border:1.5px solid var(--line);border-radius:11px;padding:14px 15px;cursor:pointer;
+  transition:transform .1s ease,border-color .14s ease,background .14s ease}
+.choice:active{transform:scale(.99)}
+.choice:hover{border-color:var(--indigo)}
+.choice .key{font-family:"IBM Plex Mono";font-weight:600;font-size:.78rem;width:22px;height:22px;flex:none;
+  display:grid;place-items:center;border-radius:5px;background:var(--paper-2);color:var(--ink-2)}
+.choice .txt{flex:1;font-size:.95rem}
+.choice.picked{border-color:var(--indigo);background:color-mix(in srgb,var(--indigo) 9%,transparent);pointer-events:none}
+.choice.picked .key{background:var(--indigo);color:#fff}
+.dk{width:100%;font:inherit;margin-top:4px;padding:12px;border-radius:11px;cursor:pointer;
+  background:transparent;border:1.5px dashed var(--line-2);color:var(--ink-3);font-size:.86rem;font-weight:500;
+  transition:transform .1s ease,border-color .14s,color .14s}
+.dk:active{transform:scale(.99)}
+.dk:hover{border-color:var(--coral);color:var(--coral)}
+.dk.picked{border-style:solid;border-color:var(--coral);color:var(--coral);background:color-mix(in srgb,var(--coral) 7%,transparent);pointer-events:none}
+
+/* ---------- result ---------- */
+.rep-head{display:flex;align-items:baseline;justify-content:space-between;margin:16px 0 4px}
+.rep-head .lbl{font-family:"IBM Plex Mono";font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.rep-head .date{font-family:"IBM Plex Mono";font-size:.66rem;color:var(--ink-3)}
+.overall{display:flex;align-items:flex-end;gap:16px;margin-top:6px}
+.overall .cefr{font-family:"IBM Plex Mono";font-weight:700;font-size:4.4rem;line-height:.9;letter-spacing:-.03em;color:var(--indigo)}
+.overall .cefr small{font-size:1.4rem;color:var(--coral);vertical-align:super}
+.overall .meta{padding-bottom:8px}
+.overall .meta .name{font-size:.9rem;font-weight:600}
+.overall .meta .sub{font-size:.76rem;color:var(--ink-2)}
+
+/* spectrum — signature element */
+.spectrum{margin:24px 0 8px}
+.spectrum .axis{position:relative;height:34px;border-radius:8px;overflow:hidden;
+  background:linear-gradient(90deg,var(--sp-a1),var(--sp-a2),var(--sp-b1),var(--sp-b2),var(--sp-c1))}
+.spectrum .axis .grid{position:absolute;inset:0;display:flex}
+.spectrum .axis .grid span{flex:1;border-right:1px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;
+  font-family:"IBM Plex Mono";font-size:.62rem;font-weight:600;color:rgba(255,255,255,.92)}
+.spectrum .axis .grid span:last-child{border-right:none}
+.spectrum .needle{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px;
+  transform:translateX(-50%);transition:left .7s cubic-bezier(.34,1.15,.4,1);box-shadow:0 0 0 2px var(--card)}
+.spectrum .plots{position:relative;height:20px;margin-top:8px}
+.spectrum .plot{position:absolute;transform:translateX(-50%);transition:left .7s cubic-bezier(.34,1.15,.4,1)}
+.spectrum .plot i{display:block;width:9px;height:9px;background:var(--card);border:2px solid var(--indigo);border-radius:50%;margin:0 auto 2px}
+.spectrum .plot.weak i{border-color:var(--coral)}
+.spectrum .plot span{font-family:"IBM Plex Mono";font-size:.56rem;color:var(--ink-3);white-space:nowrap}
+
+.grid2{display:flex;gap:9px;margin:20px 0 24px}
+.grid2 .cell{flex:1;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 8px;text-align:center;box-shadow:var(--shadow)}
+.grid2 .cell b{font-family:"IBM Plex Mono";font-weight:700;font-size:1.4rem;display:block;letter-spacing:-.01em}
+.grid2 .cell small{color:var(--ink-3);font-size:.62rem;letter-spacing:.08em;font-family:"IBM Plex Mono"}
+.grid2 .cell.hl b{color:var(--coral)}
+
+.sec-h{font-family:"IBM Plex Mono";font-weight:600;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin:4px 2px 12px;
+  display:flex;align-items:center;gap:8px}
+.sec-h::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.skills{display:flex;flex-direction:column;gap:10px}
+.skill{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
+.skill .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px}
+.skill .top .nm{font-weight:600;font-size:.9rem;display:flex;align-items:center;gap:7px}
+.skill .top .nm em{font-style:normal;font-family:"IBM Plex Mono";color:var(--ink-3);font-weight:500;font-size:.72rem}
+.skill .top .lv{font-family:"IBM Plex Mono";font-weight:700;font-size:1.1rem}
+.skill .top .lv small{font-size:.7rem;color:var(--coral)}
+.skill .flag{font-family:"IBM Plex Mono";font-size:.56rem;font-weight:600;letter-spacing:.06em;color:var(--coral);
+  border:1px solid color-mix(in srgb,var(--coral) 40%,transparent);border-radius:4px;padding:1px 5px}
+.skill .meter{height:7px;background:var(--paper-2);border-radius:99px;overflow:hidden}
+.skill .meter i{display:block;height:100%;border-radius:99px;background:var(--indigo);width:0;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.skill.weak{border-color:color-mix(in srgb,var(--coral) 45%,transparent)}
+.skill.weak .meter i{background:var(--coral)}
+.skill .ticks{display:flex;justify-content:space-between;margin-top:5px}
+.skill .ticks span{font-family:"IBM Plex Mono";font-size:.56rem;color:var(--ink-3)}
+
+.findings{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--coral);border-radius:0 12px 12px 0;padding:14px 16px;margin-top:8px;box-shadow:var(--shadow)}
+.findings h3{font-family:"IBM Plex Mono";font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--coral);margin-bottom:6px}
+.findings p{font-size:.85rem;color:var(--ink-2)}
+.findings p .w{color:var(--indigo);font-weight:600}
+.findings .note{font-size:.72rem;color:var(--ink-3);margin-top:8px;font-family:"IBM Plex Mono"}
+
+.steps{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.step-i{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px;box-shadow:var(--shadow)}
+.step-i .num{font-family:"IBM Plex Mono";font-weight:700;font-size:.8rem;color:var(--indigo);width:20px;flex:none;padding-top:1px}
+.step-i .st b{font-size:.87rem;display:block}
+.step-i .st small{color:var(--ink-3);font-size:.76rem;display:block;margin-top:1px}
+
+.actions{margin-top:22px;display:flex;flex-direction:column;gap:9px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border-radius:12px;
+  font:inherit;font-weight:600;font-size:.94rem;cursor:pointer;border:1.5px solid transparent;transition:transform .1s ease,filter .18s}
+.btn:active{transform:scale(.985)}
+.btn.primary{background:var(--indigo);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--indigo) 35%,transparent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:var(--card);border-color:var(--line);color:var(--ink-2)}
+.fine{color:var(--ink-3);font-size:.66rem;text-align:center;margin-top:16px;line-height:1.5;font-family:"IBM Plex Mono";letter-spacing:.02em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= HOME ================= -->
+  <section id="home" class="screen active">
+    <div class="brand"><div class="mark"></div><b>English&nbsp;Lab</b><span class="tag">proficiency&nbsp;analysis</span></div>
+    <div class="hero">
+      <div class="eyebrow">Diagnostic v0.1</div>
+      <h1 class="jp">英語力を、<span class="u">検査する。</span></h1>
+      <p class="jp">語彙・熟語・文法を測定し、CEFR・スコア・弱点を1枚のレポートに。最短で、正確に。</p>
+      <div class="specimen">
+        <div><b class="mono">50</b><small class="mono">ITEMS</small></div>
+        <div><b class="mono">~7'</b><small class="mono">TIME</small></div>
+        <div><b class="mono">3</b><small class="mono">SKILLS</small></div>
+        <div><b class="mono">A1–C1</b><small class="mono">CEFR</small></div>
+      </div>
+    </div>
+    <div class="modes">
+      <button class="mode ready" onclick="startTest('reading')">
+        <div class="idx mono">01</div>
+        <div class="mt"><b class="jp">Reading 分析</b><small class="jp">語彙20・熟語10・文法20 — CEFR＋弱点レポート</small></div>
+        <div class="go mono">→</div>
+      </button>
+      <div class="mode soon">
+        <div class="idx mono">02</div>
+        <div class="mt"><b class="jp">Speaking 分析</b><small class="jp">音読・リテル・自由発話</small></div>
+        <div class="pill">準備中</div>
+      </div>
+      <div class="mode soon">
+        <div class="idx mono">03</div>
+        <div class="mt"><b class="jp">Full Diagnostic</b><small class="jp">Reading + Speaking / 総合レポート</small></div>
+        <div class="pill">準備中</div>
+      </div>
+    </div>
+    <div class="homefoot">
+      <div id="lastResult" class="last mono"></div>
+      <div class="copy">ENGLISH LAB · MEASUREMENT ≠ CERTIFICATION</div>
+    </div>
+  </section>
+
+  <!-- ================= TEST ================= -->
+  <section id="test" class="screen">
+    <div class="testbar">
+      <button class="back" onclick="quitTest()" aria-label="やめる">‹</button>
+      <div class="progress"><i id="prog"></i></div>
+      <div class="timer" id="timer">0:00</div>
+    </div>
+    <div class="qmeta">
+      <span class="n" id="qn">Q1 / 50</span>
+      <span class="sec" id="qsec">LEXIS</span>
+    </div>
+    <div class="qcard" id="qcard"></div>
+    <div class="choices" id="choices"></div>
+    <button class="dk jp" id="dkBtn">わからない</button>
+  </section>
+
+  <!-- ================= RESULT ================= -->
+  <section id="result" class="screen">
+    <div class="brand"><div class="mark"></div><b>English&nbsp;Lab</b><span class="tag">report</span></div>
+    <div class="rep-head">
+      <div class="lbl">Analysis Report</div>
+      <div class="date mono" id="repDate"></div>
+    </div>
+    <div class="overall">
+      <div class="cefr mono" id="ovCefr">B1<small id="ovPlus"></small></div>
+      <div class="meta"><div class="name jp" id="ovName"></div><div class="sub jp" id="ovSub"></div></div>
+    </div>
+
+    <div class="spectrum">
+      <div class="axis">
+        <div class="grid"><span>A1</span><span>A2</span><span>B1</span><span>B2</span><span>C1</span></div>
+        <div class="needle" id="needle" style="left:50%"></div>
+      </div>
+      <div class="plots" id="plots"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="cell hl"><b class="mono" id="scoreVal">—</b><small>LAB SCORE</small></div>
+      <div class="cell"><b class="mono" id="accVal">—</b><small>ACCURACY</small></div>
+      <div class="cell"><b class="mono" id="timeVal">—</b><small>TIME</small></div>
+    </div>
+
+    <div class="sec-h">分野別分析</div>
+    <div class="skills" id="skills"></div>
+
+    <div class="findings" id="findings">
+      <h3>所見 / Findings</h3>
+      <p id="findText"></p>
+      <div class="note" id="findNote"></div>
+    </div>
+
+    <div class="sec-h" style="margin-top:22px">推奨ステップ</div>
+    <div class="steps" id="steps"></div>
+
+    <div class="actions">
+      <button class="btn primary jp" onclick="startTest('reading')">もう一度分析する</button>
+      <button class="btn ghost jp" onclick="goHome()">ホームに戻る</button>
+    </div>
+    <p class="fine">SIMPLIFIED ESTIMATE · NOT AN OFFICIAL CEFR CERTIFICATION</p>
+  </section>
+
+</div>
+
+<script>
+/* =========================================================
+   CEFR MAPPING — 確定版（暫定運用）
+   単語: Sproutカテゴリ → CEFR帯。TOEFLはiBT帯で細分。
+   ---------------------------------------------------------
+   帯別プール実測（実データ規模）:
+     A2:1711  B1:1462  B2:1260  C1:423   計4856
+   → 各帯からの抽出に十分。将来、受験の正答データで補正。
+   ========================================================= */
+const WORD_CEFR_MAP = {
+  '日常生活':'A2',
+  '英検'    :'A2',
+  'TOEIC'   :'B1',
+  'ビジネス':'B2',
+  'TOEFL'   : { 'iBT40':'B1', 'iBT60':'B2', 'iBT80':'B2', 'iBT100':'C1' },
+};
+function tagWord(item){
+  const m = WORD_CEFR_MAP[item.category];
+  if(typeof m === 'string') return m;
+  if(item.category === 'TOEFL') return (WORD_CEFR_MAP.TOEFL[item.toeflBand] || 'B2');
+  return 'B1'; // 未知カテゴリの保険
+}
+// 熟語: 既存の IDIOM_CEFR タグ(A2/B1/B2/C1)をそのまま使用（タグ付け不要）
+function tagIdiom(item){ return item.cefr || 'B1'; }
+
+/* ---------------------------------------------------------
+   DATA INGESTION（Sprout差し込み口）
+   Sproutからエクスポートした配列を ingest() に渡すと、
+   自動でCEFRタグ付け → 帯別プール化され、そのまま出題されます。
+
+   期待フォーマット:
+   words = [{ head:'improve', ja:'改善する', category:'TOEIC',
+              toeflBand:null, distractors:['悪化する','維持する','中止する'] }, ...]
+   idioms= [{ head:'give up', ja:'あきらめる', cefr:'B1',
+              distractors:['始める','続ける','手伝う'] }, ...]
+   grammar=[{ sent:'She ___ to school.', cefr:'A2',
+              answer:'goes', distractors:['go','going','gone'] }, ...]
+   （grammar は Sprout の IDIOM_FILL 等から体感難易度でA2〜C1を付与）
+--------------------------------------------------------- */
+let POOL = { word:[], idiom:[], grammar:[] };
+function normalize(list, kind){
+  return list.map(it=>{
+    const cefr = kind==='word'? tagWord(it) : kind==='idiom'? tagIdiom(it) : (it.cefr||'B1');
+    if(kind==='grammar'){
+      const opts=[it.answer,...it.distractors]; const order=shuffle(opts.map((t,i)=>({t,i})));
+      return {sec:'grammar',cefr,sent:it.sent,c:order.map(o=>o.t),a:order.findIndex(o=>o.i===0)};
+    }
+    const opts=[it.ja,...it.distractors]; const order=shuffle(opts.map((t,i)=>({t,i})));
+    return {sec:kind,cefr,head:it.head,c:order.map(o=>o.t),a:order.findIndex(o=>o.i===0)};
+  });
+}
+function ingest(words, idioms, grammar){
+  POOL.word    = normalize(words,'word');
+  POOL.idiom   = normalize(idioms,'idiom');
+  POOL.grammar = normalize(grammar,'grammar');
+}
+
+/* =========================================================
+   SEED DATA — 動作確認用（Sprout差し込みまでの内蔵問題）
+   すでにタグ付け済みの形式で保持。ingest()で置換可能。
+   ========================================================= */
+const SEED_WORD=[
+ {sec:'word',cefr:'A2',head:'borrow',a:1,c:['貸す','借りる','買う','届ける']},
+ {sec:'word',cefr:'A2',head:'quiet',a:0,c:['静かな','騒がしい','明るい','危険な']},
+ {sec:'word',cefr:'A2',head:'arrive',a:0,c:['到着する','出発する','引き返す','待つ']},
+ {sec:'word',cefr:'A2',head:'cheap',a:0,c:['安い','高い','重い','新しい']},
+ {sec:'word',cefr:'A2',head:'remember',a:1,c:['忘れる','覚えている','急ぐ','疑う']},
+ {sec:'word',cefr:'B1',head:'improve',a:0,c:['改善する','悪化する','維持する','中止する']},
+ {sec:'word',cefr:'B1',head:'avoid',a:0,c:['避ける','求める','含む','許す']},
+ {sec:'word',cefr:'B1',head:'familiar',a:0,c:['よく知っている','珍しい','複雑な','危険な']},
+ {sec:'word',cefr:'B1',head:'suggest',a:0,c:['提案する','断る','命令する','証明する']},
+ {sec:'word',cefr:'B1',head:'reduce',a:1,c:['増やす','減らす','隠す','数える']},
+ {sec:'word',cefr:'B2',head:'reluctant',a:1,c:['熱心な','気が進まない','満足した','自信のある']},
+ {sec:'word',cefr:'B2',head:'enhance',a:0,c:['高める','減らす','隠す','壊す']},
+ {sec:'word',cefr:'B2',head:'inevitable',a:0,c:['避けられない','望ましい','一時的な','意図的な']},
+ {sec:'word',cefr:'B2',head:'thorough',a:0,c:['徹底的な','大まかな','怠慢な','曖昧な']},
+ {sec:'word',cefr:'B2',head:'deteriorate',a:0,c:['悪化する','回復する','安定する','拡大する']},
+ {sec:'word',cefr:'C1',head:'ubiquitous',a:0,c:['どこにでもある','ごく稀な','目に見えない','一時的な']},
+ {sec:'word',cefr:'C1',head:'meticulous',a:0,c:['細心の','大ざっぱな','怠惰な','寛大な']},
+ {sec:'word',cefr:'C1',head:'tenuous',a:1,c:['強固な','希薄で根拠の薄い','明確な','急速な']},
+ {sec:'word',cefr:'C1',head:'candid',a:0,c:['率直な','遠回しな','臆病な','形式的な']},
+ {sec:'word',cefr:'C1',head:'austere',a:1,c:['華美な','質素で厳格な','寛大な','曖昧な']},
+];
+const SEED_IDIOM=[
+ {sec:'idiom',cefr:'A2',head:'look for ~',a:0,c:['~を探す','~を見つける','~を見る','~を失う']},
+ {sec:'idiom',cefr:'A2',head:'get up',a:0,c:['起きる','座る','立ち止まる','転ぶ']},
+ {sec:'idiom',cefr:'A2',head:'a lot of ~',a:0,c:['たくさんの~','少しの~','全くない~','半分の~']},
+ {sec:'idiom',cefr:'B1',head:'give up',a:0,c:['あきらめる','始める','手伝う','続ける']},
+ {sec:'idiom',cefr:'B1',head:'run out of ~',a:0,c:['~を使い果たす','~を補充する','~を節約する','~を買いだめする']},
+ {sec:'idiom',cefr:'B1',head:'take part in ~',a:0,c:['~に参加する','~を欠席する','~を主催する','~を観戦する']},
+ {sec:'idiom',cefr:'B2',head:'put up with ~',a:0,c:['~を我慢する','~を楽しむ','~を取り除く','~を引き起こす']},
+ {sec:'idiom',cefr:'B2',head:'get the hang of ~',a:0,c:['~のコツをつかむ','~をあきらめる','~を忘れる','~を教える']},
+ {sec:'idiom',cefr:'C1',head:'cut corners',a:0,c:['手を抜く','丁寧にやる','近道を探す','角を曲がる']},
+ {sec:'idiom',cefr:'C1',head:'beat around the bush',a:0,c:['遠回しに言う','率直に言う','大声で言う','繰り返す']},
+];
+const SEED_GRAMMAR=[
+ {sec:'grammar',cefr:'A2',sent:'She ___ to school every day.',a:1,c:['go','goes','going','gone']},
+ {sec:'grammar',cefr:'A2',sent:'There ___ two books on the table.',a:1,c:['is','are','be','am']},
+ {sec:'grammar',cefr:'A2',sent:'He is good ___ tennis.',a:0,c:['at','on','in','to']},
+ {sec:'grammar',cefr:'A2',sent:'I have lived here ___ 2010.',a:0,c:['since','for','from','at']},
+ {sec:'grammar',cefr:'A2',sent:'They ___ watching TV now.',a:2,c:['is','am','are','be']},
+ {sec:'grammar',cefr:'B1',sent:'If it ___ tomorrow, we will stay home.',a:0,c:['rains','will rain','rained','rain']},
+ {sec:'grammar',cefr:'B1',sent:'She has studied English ___ three years.',a:1,c:['since','for','during','from']},
+ {sec:'grammar',cefr:'B1',sent:'The book ___ I bought is interesting.',a:1,c:['who','which','where','whose']},
+ {sec:'grammar',cefr:'B1',sent:"I'm looking forward ___ you.",a:0,c:['to seeing','to see','seeing','see']},
+ {sec:'grammar',cefr:'B1',sent:'You ___ finish it by Friday.',a:2,c:['can','may','must','would']},
+ {sec:'grammar',cefr:'B2',sent:'By the time we arrived, the movie ___.',a:0,c:['had already started','already started','has started','starts']},
+ {sec:'grammar',cefr:'B2',sent:"I'd rather you ___ smoke here.",a:0,c:["didn't",'not',"won't","don't"]},
+ {sec:'grammar',cefr:'B2',sent:'It is high time we ___ home.',a:0,c:['went','go','have gone','going']},
+ {sec:'grammar',cefr:'B2',sent:'The plan, ___ deadline is Monday, is late.',a:0,c:['whose','which','that','who']},
+ {sec:'grammar',cefr:'B2',sent:'He talks as if he ___ everything.',a:1,c:['knows','knew','know','has known']},
+ {sec:'grammar',cefr:'C1',sent:'Not only ___ late, but he also forgot it.',a:0,c:['was he','he was','did he','he did']},
+ {sec:'grammar',cefr:'C1',sent:'Little ___ that she was being watched.',a:0,c:['did she know','she knew','she did know','knew she']},
+ {sec:'grammar',cefr:'C1',sent:'___ as it may seem, the theory holds.',a:0,c:['Strange','Strangely','However strange','As strange']},
+ {sec:'grammar',cefr:'C1',sent:'Were it not ___ your help, we would fail.',a:0,c:['for','of','to','with']},
+ {sec:'grammar',cefr:'C1',sent:'Seldom ___ such dedication.',a:0,c:['have I seen','I have seen','I saw','did I saw']},
+];
+POOL={word:SEED_WORD.slice(),idiom:SEED_IDIOM.slice(),grammar:SEED_GRAMMAR.slice()};
+
+/* =========================================================
+   CEFR constants
+   ========================================================= */
+const BAND_ORDER=['A2','B1','B2','C1'];
+const BAND_NUM={A1:1,A2:2,B1:3,B2:4,C1:5};
+const NUM_BAND={1:'A1',2:'A2',3:'B1',4:'B2',5:'C1'};
+const WEIGHT={A2:1,B1:2,B2:3,C1:4};
+const CEFR_NAME={A1:'入門レベル',A2:'初級レベル',B1:'中級レベル',B2:'中上級レベル',C1:'上級レベル'};
+const CEFR_SUB={
+ A1:'基礎の入口。定型表現が中心。',A2:'日常の基本を扱える。',
+ B1:'自立して使える中級者。',B2:'実用レベルで幅広く対応。',C1:'熟達に近い運用力。'
+};
+// 出題設計: 各帯の抽出数
+const PLAN={word:{A2:5,B1:5,B2:5,C1:5}, idiom:{A2:3,B1:3,B2:2,C1:2}, grammar:{A2:5,B1:5,B2:5,C1:5}};
+
+function shuffle(a){a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a}
+function pickPerBand(pool,plan){
+  const out=[];
+  for(const band of BAND_ORDER){
+    const inBand=shuffle(pool.filter(q=>q.cefr===band));
+    out.push(...inBand.slice(0,plan[band]));
+  }
+  return shuffle(out);
+}
+
+/* =========================================================
+   TEST STATE
+   ========================================================= */
+let quiz=[], idx=0, answers=[], t0=0, timerId=null;
+const SEC_TAG={word:'LEXIS',idiom:'IDIOM',grammar:'GRAMMAR'};
+const SEC_LEAD={word:'この語の意味は？',idiom:'この熟語の意味は？'};
+
+function buildQuiz(){
+  return [
+    ...pickPerBand(POOL.word,   PLAN.word),
+    ...pickPerBand(POOL.idiom,  PLAN.idiom),
+    ...pickPerBand(POOL.grammar,PLAN.grammar),
+  ];
+}
+function startTest(){
+  quiz=buildQuiz(); idx=0; answers=[];
+  show('test'); t0=Date.now(); startTimer(); renderQ();
+}
+function startTimer(){
+  clearInterval(timerId);
+  timerId=setInterval(()=>{
+    const s=Math.floor((Date.now()-t0)/1000);
+    document.getElementById('timer').textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  },500);
+}
+function renderQ(){
+  const q=quiz[idx];
+  document.getElementById('prog').style.width=`${(idx/quiz.length)*100}%`;
+  document.getElementById('qn').textContent=`Q${idx+1} / ${quiz.length}`;
+  document.getElementById('qsec').textContent=SEC_TAG[q.sec];
+  const card=document.getElementById('qcard');
+  if(q.sec==='grammar'){
+    card.innerHTML=`<div class="lead">空所に入る語を選んでください</div>
+      <div class="sentence">${q.sent.replace('___','<span class="blank">?</span>')}</div>`;
+  }else{
+    card.innerHTML=`<div class="lead">${SEC_LEAD[q.sec]}</div><div class="headword">${q.head}</div>`;
+  }
+  const box=document.getElementById('choices'); box.innerHTML='';
+  const keys=['A','B','C','D'];
+  q.c.forEach((txt,ci)=>{
+    const b=document.createElement('button');
+    b.className='choice';
+    b.innerHTML=`<span class="key">${keys[ci]}</span><span class="txt">${txt}</span>`;
+    b.onclick=()=>pick(ci,b,false);
+    box.appendChild(b);
+  });
+  const dk=document.getElementById('dkBtn');
+  dk.className='dk jp'; dk.textContent='わからない';
+  dk.onclick=()=>pick(-1,dk,true);
+}
+function pick(ci,el,isDK){
+  el.classList.add('picked');
+  const q=quiz[idx];
+  answers.push({sec:q.sec,cefr:q.cefr,correct:(!isDK && ci===q.a),dk:isDK});
+  setTimeout(()=>{ idx++; (idx>=quiz.length)?finish():renderQ(); },170);
+}
+function quitTest(){ if(confirm('分析をやめてホームに戻りますか？')){clearInterval(timerId);goHome();} }
+
+/* =========================================================
+   SCORING — 分野ごと mastery-threshold 方式（「わからない」は不正解扱い）
+   ========================================================= */
+function estimateSkill(rows){
+  const bb={}; BAND_ORDER.forEach(b=>bb[b]={n:0,ok:0});
+  rows.forEach(r=>{bb[r.cefr].n++; if(r.correct)bb[r.cefr].ok++;});
+  const acc=b=>bb[b].n? bb[b].ok/bb[b].n : null;
+  let level='A1', num=1;
+  const a2=acc('A2');
+  if(a2!==null){
+    if(a2>=0.6){ level='A2'; num=2;
+      for(let k=1;k<BAND_ORDER.length;k++){const b=BAND_ORDER[k],v=acc(b);
+        if(v!==null && v>=0.6){level=b;num=BAND_NUM[b];} else break;}
+    } else if(a2>=0.4){ level='A2-'; num=1.6; }
+  }
+  let plus=false, cont=num;
+  const ni=BAND_ORDER.indexOf(NUM_BAND[Math.round(num)]);
+  if(ni>=0 && ni<BAND_ORDER.length-1){
+    const nb=BAND_ORDER[ni+1], nv=acc(nb);
+    if(nv!==null){ cont=num+Math.max(0,Math.min(1,nv))*0.9; if(nv>=0.4&&nv<0.6)plus=true; }
+  }
+  const ok=rows.filter(r=>r.correct).length;
+  const dk=rows.filter(r=>r.dk).length;
+  return {level,num,cont,plus,acc:ok/rows.length,dk,n:rows.length};
+}
+function grade(){
+  const secs=['word','idiom','grammar'], skills={};
+  secs.forEach(s=>skills[s]=estimateSkill(answers.filter(a=>a.sec===s)));
+  const contAvg=(skills.word.cont+skills.idiom.cont+skills.grammar.cont)/3;
+  const ovNum=Math.max(1,Math.min(5,Math.round(contAvg)));
+  const ovBand=NUM_BAND[ovNum];
+  const ovPlus=(contAvg-ovNum)>=0.4 && ovNum<5;
+  let earn=0,tot=0; answers.forEach(a=>{const w=WEIGHT[a.cefr];tot+=w;if(a.correct)earn+=w;});
+  const score=Math.round(earn/tot*1000);
+  const acc=Math.round(answers.filter(a=>a.correct).length/answers.length*100);
+  const dkTotal=answers.filter(a=>a.dk).length;
+  const weak=secs.reduce((m,s)=>skills[s].cont<skills[m].cont?s:m,'word');
+  return {skills,ovBand,ovPlus,contAvg,score,acc,weak,dkTotal};
+}
+
+/* ---------- recommendations（中立表現・独立アプリ想定） ---------- */
+const SEC_JA={word:'語彙',idiom:'熟語',grammar:'文法'};
+function stepsFor(res){
+  const order=['word','idiom','grammar'].sort((a,b)=>res.skills[a].cont-res.skills[b].cont);
+  const lv=s=>res.skills[s].level.replace('-','');
+  const make=s=>{
+    if(s==='word')   return {t:`語彙トレーニング（${lv(s)}帯）`, d:'フラッシュカードと4択で反復。弱い帯を集中的に。'};
+    if(s==='idiom')  return {t:`熟語・語法の演習（${lv(s)}）`, d:'前置詞／助詞の穴埋め（Part 5形式）で語法を固める。'};
+    return {t:'文法パターン演習', d:'誤答した構文を型ごとに再演習。仮定法・倒置は重点的に。'};
+  };
+  const out = order.map((s,i)=>{const m=make(s); if(i===0)m.d='まずここから。 '+m.d; return m;});
+  out.push({t:'発話トレーニング（準備中）', d:'測定レベルに合わせた会話練習で、使える力へ変換。'});
+  return out.slice(0,4);
+}
+
+/* =========================================================
+   RESULT
+   ========================================================= */
+function finish(){
+  clearInterval(timerId);
+  const elapsed=Math.floor((Date.now()-t0)/1000);
+  const res=grade();
+  renderResult(res,elapsed);
+  saveResult(res,elapsed);
+  show('result'); window.scrollTo(0,0);
+}
+const fmtLv=lv=>lv==='A2-'?'A2手前':lv;
+const posPct=cont=>Math.max(3,Math.min(97,((cont-1)/4)*100)); // 1..5 → 0..100
+
+function renderResult(res,elapsed){
+  document.getElementById('repDate').textContent=new Date().toISOString().slice(0,10).replace(/-/g,'.');
+  document.getElementById('ovCefr').firstChild.textContent=res.ovBand;
+  document.getElementById('ovPlus').textContent=res.ovPlus?'+':'';
+  document.getElementById('ovName').textContent=CEFR_NAME[res.ovBand];
+  document.getElementById('ovSub').textContent=CEFR_SUB[res.ovBand];
+
+  // spectrum needle + skill plots
+  const needle=document.getElementById('needle');
+  requestAnimationFrame(()=>setTimeout(()=>{needle.style.left=posPct(res.contAvg)+'%';},80));
+  const plots=document.getElementById('plots'); plots.innerHTML='';
+  const names={word:'語彙',idiom:'熟語',grammar:'文法'};
+  ['word','idiom','grammar'].forEach((s,i)=>{
+    const p=document.createElement('div');
+    p.className='plot'+(s===res.weak?' weak':'');
+    p.style.left='50%';
+    p.innerHTML=`<i></i><span>${names[s]}</span>`;
+    plots.appendChild(p);
+    requestAnimationFrame(()=>setTimeout(()=>{p.style.left=posPct(res.skills[s].cont)+'%';},120+i*60));
+  });
+
+  document.getElementById('scoreVal').textContent=res.score;
+  document.getElementById('accVal').textContent=res.acc+'%';
+  document.getElementById('timeVal').textContent=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
+
+  const wrap=document.getElementById('skills'); wrap.innerHTML='';
+  ['word','idiom','grammar'].forEach(s=>{
+    const sk=res.skills[s], weak=(s===res.weak);
+    const fill=((sk.cont-1)/4)*100;
+    const el=document.createElement('div');
+    el.className='skill'+(weak?' weak':'');
+    el.innerHTML=`
+      <div class="top">
+        <div class="nm jp">${names[s]}<em>${Math.round(sk.acc*100)}% 正答</em>${weak?'<span class="flag">最優先</span>':''}</div>
+        <div class="lv mono">${fmtLv(sk.level)}<small>${sk.plus?'+':''}</small></div>
+      </div>
+      <div class="meter"><i data-w="${Math.max(3,Math.min(100,fill))}"></i></div>
+      <div class="ticks"><span>A1</span><span>A2</span><span>B1</span><span>B2</span><span>C1</span></div>`;
+    wrap.appendChild(el);
+  });
+  requestAnimationFrame(()=>setTimeout(()=>{
+    document.querySelectorAll('.skill .meter i').forEach(i=>i.style.width=i.dataset.w+'%');
+  },140));
+
+  const wsk=res.skills[res.weak];
+  document.getElementById('findText').innerHTML=
+    `いちばんの伸びしろは <span class="w">${names[res.weak]}（${fmtLv(wsk.level)}）</span>。`+
+    `ここを1段引き上げると、総合CEFRが最も動きます。`;
+  const note=document.getElementById('findNote');
+  note.textContent = res.dkTotal>0
+    ? `「わからない」= ${res.dkTotal}問 · 推測を排した測定です`
+    : `全問回答 · まぐれ要素の少ない結果です`;
+
+  const steps=document.getElementById('steps'); steps.innerHTML='';
+  stepsFor(res).forEach((st,i)=>{
+    const e=document.createElement('div');
+    e.className='step-i';
+    e.innerHTML=`<div class="num mono">${i+1}</div><div class="st jp"><b>${st.t}</b><small>${st.d}</small></div>`;
+    steps.appendChild(e);
+  });
+}
+
+/* ---------- persistence ---------- */
+function saveResult(res,sec){
+  try{
+    const rec={date:Date.now(),band:res.ovBand,plus:res.ovPlus,score:res.score,acc:res.acc,sec};
+    localStorage.setItem('englishlab_last',JSON.stringify(rec));
+    const h=JSON.parse(localStorage.getItem('englishlab_hist')||'[]');
+    h.push(rec); localStorage.setItem('englishlab_hist',JSON.stringify(h.slice(-30)));
+  }catch(e){}
+}
+function showLast(){
+  try{
+    const r=JSON.parse(localStorage.getItem('englishlab_last')||'null');
+    if(!r)return;
+    const el=document.getElementById('lastResult'); el.style.display='block';
+    const d=new Date(r.date);
+    el.innerHTML=`PREV · <b>${r.band}${r.plus?'+':''}</b> · SCORE <b>${r.score}</b> · ${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  }catch(e){}
+}
+
+/* ---------- nav ---------- */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active'); window.scrollTo(0,0);
+}
+function goHome(){ clearInterval(timerId); show('home'); showLast(); }
+showLast();
+</script>
+</body>
+</html>
