@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#14151c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>English Lab — 英語力分析</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   ENGLISH LAB
+   world: a language diagnostics lab. Clinical, precise,
+   data-forward. Signature = the CEFR spectrum readout.
+   type: IBM Plex Mono (data) / Sans (body) / Noto JP.
+   palette: graphite ink, lab paper, indigo primary,
+            coral "signal" for the reading.
+   ========================================================= */
+:root{
+  --paper:#f4f4f1;
+  --paper-2:#eceae4;
+  --card:#ffffff;
+  --ink:#1a1c22;
+  --ink-2:#565a66;
+  --ink-3:#9096a0;
+  --line:#e2e0d8;
+  --line-2:#d3d1c8;
+  --indigo:#4a45c9;
+  --indigo-2:#6b66e0;
+  --coral:#f0503c;
+  --coral-2:#ff6a55;
+  --ok:#2f9e6e;
+  /* spectrum band tints */
+  --sp-a1:#c7cbd6; --sp-a2:#8f96e0; --sp-b1:#6a63dd; --sp-b2:#4a45c9; --sp-c1:#2c288f;
+  --shadow:0 1px 2px rgba(20,22,30,.05),0 6px 20px rgba(20,22,30,.06);
+  --shadow-lg:0 2px 5px rgba(20,22,30,.08),0 16px 40px rgba(20,22,30,.12);
+  --r:14px; --maxw:460px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#101118; --paper-2:#171922; --card:#1a1c26; --ink:#eef0f5;
+    --ink-2:#a4aab8; --ink-3:#6a7080; --line:#282b38; --line-2:#333748;
+    --indigo:#7f7af0; --indigo-2:#9a96f5; --coral:#ff6552; --coral-2:#ff7d6b;
+    --sp-a1:#3a3e4d; --sp-a2:#4a4795; --sp-b1:#6a63dd; --sp-b2:#8b86f0; --sp-c1:#b6b2f8;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.4);
+    --shadow-lg:0 2px 5px rgba(0,0,0,.45),0 16px 40px rgba(0,0,0,.55);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:"IBM Plex Sans","Noto Sans JP",system-ui,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.6;
+  -webkit-font-smoothing:antialiased;overscroll-behavior-y:none;
+}
+.jp{font-family:"Noto Sans JP","IBM Plex Sans",sans-serif}
+.mono{font-family:"IBM Plex Mono",monospace;font-feature-settings:"tnum" 1;font-variant-numeric:tabular-nums}
+.wrap{max-width:var(--maxw);margin:0 auto;min-height:100%;
+  padding:max(18px,env(safe-area-inset-top)) 20px calc(26px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column}
+
+.screen{display:none;flex:1;flex-direction:column;animation:fade .3s ease}
+.screen.active{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- brand ---------- */
+.brand{display:flex;align-items:center;gap:10px}
+.brand .mark{width:28px;height:28px;flex:none;position:relative;border:2px solid var(--ink);border-radius:6px;display:grid;place-items:center}
+.brand .mark::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 3px color-mix(in srgb,var(--coral) 22%,transparent)}
+.brand b{font-family:"IBM Plex Mono";font-weight:600;letter-spacing:.02em;font-size:.98rem}
+.brand .tag{margin-left:auto;font-family:"IBM Plex Mono";font-size:.6rem;font-weight:500;letter-spacing:.22em;color:var(--ink-3);text-transform:uppercase}
+
+/* ---------- home ---------- */
+.hero{margin:34px 0 26px}
+.eyebrow{font-family:"IBM Plex Mono";font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;color:var(--coral);margin-bottom:14px}
+.hero h1{font-family:"IBM Plex Sans";font-weight:600;font-size:2.05rem;line-height:1.14;letter-spacing:-.02em}
+.hero h1 .u{background:linear-gradient(transparent 62%,color-mix(in srgb,var(--indigo) 26%,transparent) 62%)}
+.hero p{color:var(--ink-2);font-size:.9rem;margin-top:14px;max-width:33ch}
+
+.specimen{display:flex;gap:1px;margin-top:20px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--line)}
+.specimen div{flex:1;background:var(--card);padding:10px 6px;text-align:center}
+.specimen div b{font-family:"IBM Plex Mono";font-size:1.05rem;font-weight:600;display:block}
+.specimen div small{font-size:.6rem;color:var(--ink-3);letter-spacing:.08em}
+
+.modes{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.mode{display:flex;align-items:center;gap:14px;text-align:left;width:100%;font:inherit;color:inherit;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;
+  box-shadow:var(--shadow);cursor:pointer;position:relative;
+  transition:transform .14s ease,border-color .18s ease,box-shadow .2s ease}
+.mode:active{transform:scale(.985)}
+.mode.ready:hover{border-color:var(--indigo);box-shadow:var(--shadow-lg)}
+.mode .idx{font-family:"IBM Plex Mono";font-size:.7rem;font-weight:600;color:var(--ink-3);width:26px;flex:none}
+.mode .mt{flex:1;min-width:0}
+.mode .mt b{font-size:.98rem;font-weight:600;letter-spacing:-.01em}
+.mode .mt small{display:block;color:var(--ink-3);font-size:.74rem;margin-top:1px}
+.mode .go{font-family:"IBM Plex Mono";color:var(--indigo);font-size:1rem}
+.mode.soon{opacity:.55;cursor:default}
+.pill{font-family:"IBM Plex Mono";font-size:.58rem;font-weight:600;letter-spacing:.12em;color:var(--ink-3);
+  border:1px solid var(--line-2);border-radius:99px;padding:3px 9px;white-space:nowrap}
+
+.homefoot{margin-top:auto;padding-top:24px}
+.homefoot .last{display:none;background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:11px 14px;font-size:.76rem;color:var(--ink-2);margin-bottom:12px}
+.homefoot .last b{font-family:"IBM Plex Mono";color:var(--indigo)}
+.homefoot .copy{color:var(--ink-3);font-size:.66rem;text-align:center;font-family:"IBM Plex Mono";letter-spacing:.06em}
+
+/* ---------- test ---------- */
+.testbar{display:flex;align-items:center;gap:12px}
+.testbar .back{background:none;border:none;color:var(--ink-3);font-size:1.4rem;cursor:pointer;line-height:1;padding:2px 4px}
+.progress{flex:1;height:5px;background:var(--paper-2);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--indigo);border-radius:99px;transition:width .3s cubic-bezier(.4,0,.2,1)}
+.timer{font-family:"IBM Plex Mono";font-weight:500;font-size:.8rem;color:var(--ink-2);min-width:42px;text-align:right}
+
+.qmeta{display:flex;align-items:center;gap:10px;margin:24px 0 12px}
+.qmeta .n{font-family:"IBM Plex Mono";font-weight:600;color:var(--ink-3);font-size:.76rem}
+.qmeta .sec{font-family:"IBM Plex Mono";font-size:.64rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  padding:3px 10px;border-radius:5px;background:var(--paper-2);color:var(--ink-2)}
+
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px 20px;
+  box-shadow:var(--shadow);text-align:center;margin-bottom:18px}
+.qcard .lead{font-size:.76rem;color:var(--ink-3);margin-bottom:14px;font-family:"Noto Sans JP"}
+.qcard .headword{font-family:"IBM Plex Mono";font-weight:600;font-size:1.95rem;letter-spacing:-.01em;line-height:1.2;word-break:break-word}
+.qcard .sentence{font-family:"IBM Plex Mono";font-weight:500;font-size:1.22rem;line-height:1.55;letter-spacing:-.005em}
+.qcard .blank{color:var(--coral);border-bottom:2px solid var(--coral);padding:0 16px;margin:0 3px}
+
+.choices{display:flex;flex-direction:column;gap:9px}
+.choice{display:flex;align-items:center;gap:12px;text-align:left;width:100%;font:inherit;color:inherit;
+  background:var(--card);border:1.5px solid var(--line);border-radius:11px;padding:14px 15px;cursor:pointer;
+  transition:transform .1s ease,border-color .14s ease,background .14s ease}
+.choice:active{transform:scale(.99)}
+.choice:hover{border-color:var(--indigo)}
+.choice .key{font-family:"IBM Plex Mono";font-weight:600;font-size:.78rem;width:22px;height:22px;flex:none;
+  display:grid;place-items:center;border-radius:5px;background:var(--paper-2);color:var(--ink-2)}
+.choice .txt{flex:1;font-size:.95rem}
+.choice.picked{border-color:var(--indigo);background:color-mix(in srgb,var(--indigo) 9%,transparent)}
+.choice.picked .key{background:var(--indigo);color:#fff}
+.dk{width:100%;font:inherit;margin-top:4px;padding:12px;border-radius:11px;cursor:pointer;
+  background:transparent;border:1.5px dashed var(--line-2);color:var(--ink-3);font-size:.86rem;font-weight:500;
+  transition:transform .1s ease,border-color .14s,color .14s}
+.dk:active{transform:scale(.99)}
+.dk:hover{border-color:var(--coral);color:var(--coral)}
+.dk.picked{border-style:solid;border-color:var(--coral);color:var(--coral);background:color-mix(in srgb,var(--coral) 7%,transparent)}
+
+/* ---------- result ---------- */
+.rep-head{display:flex;align-items:baseline;justify-content:space-between;margin:16px 0 4px}
+.rep-head .lbl{font-family:"IBM Plex Mono";font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.rep-head .date{font-family:"IBM Plex Mono";font-size:.66rem;color:var(--ink-3)}
+.overall{display:flex;align-items:flex-end;gap:16px;margin-top:6px}
+.overall .cefr{font-family:"IBM Plex Mono";font-weight:700;font-size:4.4rem;line-height:.9;letter-spacing:-.03em;color:var(--indigo)}
+.overall .cefr small{font-size:1.4rem;color:var(--coral);vertical-align:super}
+.overall .meta{padding-bottom:8px}
+.overall .meta .name{font-size:.9rem;font-weight:600}
+.overall .meta .sub{font-size:.76rem;color:var(--ink-2)}
+
+/* spectrum — signature element */
+.spectrum{margin:24px 0 8px}
+.spectrum .axis{position:relative;height:34px;border-radius:8px;overflow:hidden;
+  background:linear-gradient(90deg,var(--sp-a1),var(--sp-a2),var(--sp-b1),var(--sp-b2),var(--sp-c1))}
+.spectrum .axis .grid{position:absolute;inset:0;display:flex}
+.spectrum .axis .grid span{flex:1;border-right:1px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;
+  font-family:"IBM Plex Mono";font-size:.62rem;font-weight:600;color:rgba(255,255,255,.92)}
+.spectrum .axis .grid span:last-child{border-right:none}
+.spectrum .needle{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink);border-radius:2px;
+  transform:translateX(-50%);transition:left .7s cubic-bezier(.34,1.15,.4,1);box-shadow:0 0 0 2px var(--card)}
+.spectrum .plots{position:relative;height:20px;margin-top:8px}
+.spectrum .plot{position:absolute;transform:translateX(-50%);transition:left .7s cubic-bezier(.34,1.15,.4,1)}
+.spectrum .plot i{display:block;width:9px;height:9px;background:var(--card);border:2px solid var(--indigo);border-radius:50%;margin:0 auto 2px}
+.spectrum .plot.weak i{border-color:var(--coral)}
+.spectrum .plot span{font-family:"IBM Plex Mono";font-size:.56rem;color:var(--ink-3);white-space:nowrap}
+
+.grid2{display:flex;gap:9px;margin:20px 0 24px}
+.grid2 .cell{flex:1;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 8px;text-align:center;box-shadow:var(--shadow)}
+.grid2 .cell b{font-family:"IBM Plex Mono";font-weight:700;font-size:1.4rem;display:block;letter-spacing:-.01em}
+.grid2 .cell small{color:var(--ink-3);font-size:.62rem;letter-spacing:.08em;font-family:"IBM Plex Mono"}
+.grid2 .cell.hl b{color:var(--coral)}
+
+.sec-h{font-family:"IBM Plex Mono";font-weight:600;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin:4px 2px 12px;
+  display:flex;align-items:center;gap:8px}
+.sec-h::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.skills{display:flex;flex-direction:column;gap:10px}
+.skill{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
+.skill .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px}
+.skill .top .nm{font-weight:600;font-size:.9rem;display:flex;align-items:center;gap:7px}
+.skill .top .nm em{font-style:normal;font-family:"IBM Plex Mono";color:var(--ink-3);font-weight:500;font-size:.72rem}
+.skill .top .lv{font-family:"IBM Plex Mono";font-weight:700;font-size:1.1rem}
+.skill .top .lv small{font-size:.7rem;color:var(--coral)}
+.skill .flag{font-family:"IBM Plex Mono";font-size:.56rem;font-weight:600;letter-spacing:.06em;color:var(--coral);
+  border:1px solid color-mix(in srgb,var(--coral) 40%,transparent);border-radius:4px;padding:1px 5px}
+.skill .meter{height:7px;background:var(--paper-2);border-radius:99px;overflow:hidden}
+.skill .meter i{display:block;height:100%;border-radius:99px;background:var(--indigo);width:0;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.skill.weak{border-color:color-mix(in srgb,var(--coral) 45%,transparent)}
+.skill.weak .meter i{background:var(--coral)}
+.skill .ticks{display:flex;justify-content:space-between;margin-top:5px}
+.skill .ticks span{font-family:"IBM Plex Mono";font-size:.56rem;color:var(--ink-3)}
+
+.findings{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--coral);border-radius:0 12px 12px 0;padding:14px 16px;margin-top:8px;box-shadow:var(--shadow)}
+.findings h3{font-family:"IBM Plex Mono";font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--coral);margin-bottom:6px}
+.findings p{font-size:.85rem;color:var(--ink-2)}
+.findings p .w{color:var(--indigo);font-weight:600}
+.findings .note{font-size:.72rem;color:var(--ink-3);margin-top:8px;font-family:"IBM Plex Mono"}
+
+.steps{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.step-i{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px;box-shadow:var(--shadow)}
+.step-i .num{font-family:"IBM Plex Mono";font-weight:700;font-size:.8rem;color:var(--indigo);width:20px;flex:none;padding-top:1px}
+.step-i .st b{font-size:.87rem;display:block}
+.step-i .st small{color:var(--ink-3);font-size:.76rem;display:block;margin-top:1px}
+
+.actions{margin-top:22px;display:flex;flex-direction:column;gap:9px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border-radius:12px;
+  font:inherit;font-weight:600;font-size:.94rem;cursor:pointer;border:1.5px solid transparent;transition:transform .1s ease,filter .18s}
+.btn:active{transform:scale(.985)}
+.btn.primary{background:var(--indigo);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--indigo) 35%,transparent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:var(--card);border-color:var(--line);color:var(--ink-2)}
+.fine{color:var(--ink-3);font-size:.66rem;text-align:center;margin-top:16px;line-height:1.5;font-family:"IBM Plex Mono";letter-spacing:.02em}
+
+/* test nav */
+.navrow{display:flex;gap:10px;margin-top:16px}
+.navbtn{flex:1;font:inherit;font-weight:600;font-size:.9rem;padding:13px;border-radius:11px;cursor:pointer;
+  background:var(--card);border:1.5px solid var(--line);color:var(--ink-2);transition:transform .1s ease,border-color .15s,opacity .15s}
+.navbtn:active{transform:scale(.98)}
+.navbtn:hover:not(:disabled){border-color:var(--indigo)}
+.navbtn:disabled{opacity:.4;cursor:default}
+.navbtn.next{background:var(--indigo);border-color:var(--indigo);color:#fff}
+.navbtn.next:disabled{background:var(--card);border-color:var(--line);color:var(--ink-3)}
+.navbtn.finish{background:var(--coral);border-color:var(--coral);color:#fff}
+
+/* review */
+.rev-title{font-weight:600;font-size:1rem}
+.rev-summary{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px;
+  margin:16px 0 14px;font-size:.82rem;color:var(--ink-2);display:flex;gap:16px;justify-content:center;box-shadow:var(--shadow)}
+.rev-summary b{font-family:"IBM Plex Mono"}
+.rev-summary .ok{color:var(--ok)} .rev-summary .ng{color:var(--coral)}
+.rev-list{display:flex;flex-direction:column;gap:8px}
+.rev-item{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px;box-shadow:var(--shadow);border-left:3px solid var(--ok)}
+.rev-item.ng{border-left-color:var(--coral)}
+.rev-item .rh{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.rev-item .rn{font-family:"IBM Plex Mono";font-size:.68rem;color:var(--ink-3)}
+.rev-item .rtag{font-family:"IBM Plex Mono";font-size:.6rem;font-weight:600;letter-spacing:.06em;padding:2px 7px;border-radius:4px;background:var(--paper-2);color:var(--ink-2)}
+.rev-item .rmark{margin-left:auto;font-family:"IBM Plex Mono";font-size:.74rem;font-weight:600}
+.rev-item .rmark.ok{color:var(--ok)} .rev-item .rmark.ng{color:var(--coral)}
+.rev-item .rq{font-family:"IBM Plex Mono";font-size:.92rem;margin-bottom:6px;line-height:1.4}
+.rev-item .rq b{color:var(--coral);font-weight:600;border-bottom:2px solid var(--coral);padding:0 8px}
+.rev-item .ra{font-size:.82rem;line-height:1.7}
+.rev-item .ra .you{color:var(--ink-2)} .rev-item .ra .you.ng{color:var(--coral)}
+.rev-item .ra .cor{color:var(--ok);font-weight:600}
+.rev-item .ra .dk{color:var(--amber)}
+
+/* speaking */
+.sp-intro{margin-top:24px}
+.sp-intro h2{font-family:"IBM Plex Sans";font-weight:600;font-size:1.7rem;letter-spacing:-.02em;margin-top:10px}
+.sp-intro p{color:var(--ink-2);font-size:.9rem;margin-top:12px}
+.sp-tasks{list-style:none;margin:22px 0 0;display:flex;flex-direction:column;gap:10px}
+.sp-tasks li{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.sp-tasks li b.mono{color:var(--indigo);font-size:.82rem;flex:none}
+.sp-tasks li div b{font-size:.95rem}
+.sp-tasks li div small{display:block;color:var(--ink-3);font-size:.76rem;margin-top:1px}
+.sp-mic{margin-top:18px;font-size:.78rem;color:var(--ink-3);background:var(--paper-2);border-radius:10px;padding:11px 14px;line-height:1.5}
+
+.sp-instr{font-size:.82rem;color:var(--ink-2);margin:22px 0 12px;text-align:center}
+.sp-content{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px 20px;box-shadow:var(--shadow);text-align:center;margin-bottom:8px;min-height:96px;display:flex;flex-direction:column;justify-content:center}
+.sp-content .read{font-family:"IBM Plex Sans";font-size:1.28rem;font-weight:500;line-height:1.55}
+.sp-content .passage{font-size:1.02rem;line-height:1.7;color:var(--ink)}
+.sp-content .topic{font-family:"IBM Plex Sans";font-size:1.35rem;font-weight:600;line-height:1.4}
+.sp-content .hidden-msg{color:var(--ink-3);font-size:.9rem}
+.sp-prep{font-family:"IBM Plex Mono";font-size:.8rem;color:var(--coral);margin-top:12px}
+.sp-prep b{font-size:1.1rem}
+
+.sp-reclimit{text-align:center;font-family:"IBM Plex Mono";font-size:.7rem;color:var(--ink-3);margin:10px 0}
+.sp-recwrap{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:18px}
+.sp-recbtn{width:88px;height:88px;border-radius:50%;border:none;cursor:pointer;display:grid;place-items:center;
+  background:var(--indigo);color:#fff;font-size:1.8rem;box-shadow:0 8px 22px color-mix(in srgb,var(--indigo) 40%,transparent);
+  transition:transform .12s ease,background .2s}
+.sp-recbtn:active{transform:scale(.94)}
+.sp-recbtn.rec{background:var(--coral);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--coral) 45%,transparent)}50%{box-shadow:0 0 0 16px transparent}}
+.sp-recbtn:disabled{background:var(--ink-3);cursor:default;box-shadow:none;animation:none}
+.sp-recstate{font-family:"IBM Plex Mono";font-size:.82rem;color:var(--ink-2)}
+.sp-rectime{font-family:"IBM Plex Mono";font-size:1.4rem;font-weight:600;color:var(--coral)}
+
+.sp-playback{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.sp-playback audio{width:100%;margin-bottom:10px}
+.sp-tx{font-size:.86rem;color:var(--ink-2);line-height:1.6;background:var(--paper-2);border-radius:9px;padding:11px 13px;margin-bottom:6px}
+.sp-tx .lbl{font-family:"IBM Plex Mono";font-size:.62rem;letter-spacing:.1em;color:var(--ink-3);display:block;margin-bottom:4px}
+.sp-tx-loading{display:flex;align-items:center;gap:10px;color:var(--ink-3);font-size:.84rem;justify-content:center;padding:14px}
+.spinner{width:16px;height:16px;border:2px solid var(--line-2);border-top-color:var(--indigo);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sp-btns{display:flex;gap:9px;margin-top:14px}
+.sp-btns .btn{margin:0}
+
+.sp-processing{display:flex;flex-direction:column;align-items:center;gap:16px;padding:60px 20px;text-align:center}
+.sp-processing .spinner{width:32px;height:32px;border-width:3px}
+.sp-processing p{color:var(--ink-2);font-size:.9rem}
+
+.sp-demo{background:color-mix(in srgb,var(--amber) 14%,var(--card));border:1px solid color-mix(in srgb,var(--amber) 45%,transparent);
+  color:var(--amber);border-radius:10px;padding:9px 12px;font-size:.74rem;text-align:center;margin:14px 0 0;font-family:"IBM Plex Mono"}
+#spStrengths .fitem,#spImprove .fitem{font-size:.85rem;color:var(--ink-2);display:flex;gap:8px;margin-top:6px}
+#spStrengths .fitem::before{content:"＋";color:var(--ok);font-weight:700}
+#spImprove .fitem::before{content:"→";color:var(--coral);font-weight:700}
+.sp-tr{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px;box-shadow:var(--shadow)}
+.sp-tr .th{display:flex;gap:8px;align-items:center;margin-bottom:5px}
+.sp-tr .th .rtag{font-family:"IBM Plex Mono";font-size:.6rem;font-weight:600;letter-spacing:.06em;padding:2px 7px;border-radius:4px;background:var(--paper-2);color:var(--ink-2)}
+.sp-tr .th .m{margin-left:auto;font-family:"IBM Plex Mono";font-size:.66rem;color:var(--ink-3)}
+.sp-tr .tt{font-size:.84rem;color:var(--ink-2);line-height:1.55}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= HOME ================= -->
+  <section id="home" class="screen active">
+    <div class="brand"><div class="mark"></div><b>English&nbsp;Lab</b><span class="tag">proficiency&nbsp;analysis</span></div>
+    <div class="hero">
+      <div class="eyebrow">Diagnostic v0.1</div>
+      <h1 class="jp">英語力を、<span class="u">検査する。</span></h1>
+      <p class="jp">語彙・熟語・文法を測定し、CEFR・スコア・弱点を1枚のレポートに。最短で、正確に。</p>
+      <div class="specimen">
+        <div><b class="mono">50</b><small class="mono">ITEMS</small></div>
+        <div><b class="mono">~7'</b><small class="mono">TIME</small></div>
+        <div><b class="mono">3</b><small class="mono">SKILLS</small></div>
+        <div><b class="mono">A1–C1</b><small class="mono">CEFR</small></div>
+      </div>
+    </div>
+    <div class="modes">
+      <button class="mode ready" onclick="startTest('reading')">
+        <div class="idx mono">01</div>
+        <div class="mt"><b class="jp">Reading 分析</b><small class="jp">語彙20・熟語10・文法20 — CEFR＋弱点レポート</small></div>
+        <div class="go mono">→</div>
+      </button>
+      <button class="mode ready" onclick="startSpeaking()">
+        <div class="idx mono">02</div>
+        <div class="mt"><b class="jp">Speaking 分析</b><small class="jp">音読・リテル・自由発話 / 約4分・要マイク</small></div>
+        <div class="go mono">→</div>
+      </button>
+      <div class="mode soon">
+        <div class="idx mono">03</div>
+        <div class="mt"><b class="jp">Full Diagnostic</b><small class="jp">Reading + Speaking / 総合レポート</small></div>
+        <div class="pill">準備中</div>
+      </div>
+    </div>
+    <div class="homefoot">
+      <div id="lastResult" class="last mono"></div>
+      <div class="copy">ENGLISH LAB · MEASUREMENT ≠ CERTIFICATION</div>
+    </div>
+  </section>
+
+  <!-- ================= TEST ================= -->
+  <section id="test" class="screen">
+    <div class="testbar">
+      <button class="back" onclick="quitTest()" aria-label="やめる">✕</button>
+      <div class="progress"><i id="prog"></i></div>
+      <div class="timer" id="timer">0:00</div>
+    </div>
+    <div class="qmeta">
+      <span class="n" id="qn">Q1 / 50</span>
+      <span class="sec" id="qsec">LEXIS</span>
+    </div>
+    <div class="qcard" id="qcard"></div>
+    <div class="choices" id="choices"></div>
+    <button class="dk jp" id="dkBtn">わからない</button>
+    <div class="navrow">
+      <button class="navbtn jp" id="prevBtn" onclick="goPrev()">‹ 戻る</button>
+      <button class="navbtn next jp" id="nextBtn" onclick="goNext()">次へ ›</button>
+    </div>
+  </section>
+
+  <!-- ================= RESULT ================= -->
+  <section id="result" class="screen">
+    <div class="brand"><div class="mark"></div><b>English&nbsp;Lab</b><span class="tag">report</span></div>
+    <div class="rep-head">
+      <div class="lbl">Analysis Report</div>
+      <div class="date mono" id="repDate"></div>
+    </div>
+    <div class="overall">
+      <div class="cefr mono" id="ovCefr">B1<small id="ovPlus"></small></div>
+      <div class="meta"><div class="name jp" id="ovName"></div><div class="sub jp" id="ovSub"></div></div>
+    </div>
+
+    <div class="spectrum">
+      <div class="axis">
+        <div class="grid"><span>A1</span><span>A2</span><span>B1</span><span>B2</span><span>C1</span></div>
+        <div class="needle" id="needle" style="left:50%"></div>
+      </div>
+      <div class="plots" id="plots"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="cell hl"><b class="mono" id="scoreVal">—</b><small>LAB SCORE</small></div>
+      <div class="cell"><b class="mono" id="accVal">—</b><small>ACCURACY</small></div>
+      <div class="cell"><b class="mono" id="timeVal">—</b><small>TIME</small></div>
+    </div>
+
+    <div class="sec-h">分野別分析</div>
+    <div class="skills" id="skills"></div>
+
+    <div class="findings" id="findings">
+      <h3>所見 / Findings</h3>
+      <p id="findText"></p>
+      <div class="note" id="findNote"></div>
+    </div>
+
+    <div class="sec-h" style="margin-top:22px">推奨ステップ</div>
+    <div class="steps" id="steps"></div>
+
+    <div class="actions">
+      <button class="btn ghost jp" onclick="openReview()">解答を振り返る（正誤）</button>
+      <button class="btn primary jp" onclick="startTest('reading')">もう一度分析する</button>
+      <button class="btn ghost jp" onclick="goHome()">ホームに戻る</button>
+    </div>
+    <p class="fine">SIMPLIFIED ESTIMATE · NOT AN OFFICIAL CEFR CERTIFICATION</p>
+  </section>
+
+  <!-- ================= REVIEW ================= -->
+  <section id="review" class="screen">
+    <div class="testbar">
+      <button class="back" onclick="show('result')" aria-label="戻る">‹</button>
+      <div class="rev-title jp">解答レビュー</div>
+    </div>
+    <div class="rev-summary mono" id="revSummary"></div>
+    <div class="rev-list" id="revList"></div>
+    <div class="actions">
+      <button class="btn ghost jp" onclick="show('result')">レポートに戻る</button>
+    </div>
+  </section>
+
+  <!-- ================= SPEAKING: INTRO ================= -->
+  <section id="speak_intro" class="screen">
+    <div class="testbar">
+      <button class="back" onclick="goHome()" aria-label="やめる">✕</button>
+      <div class="rev-title jp">Speaking 分析</div>
+    </div>
+    <div class="sp-intro">
+      <div class="eyebrow">3 TASKS · ~4 MIN</div>
+      <h2 class="jp">声で、英語力を測る。</h2>
+      <p class="jp">3つの短いタスクを話すだけ。文字起こしとCEFRルーブリックで、発音・流暢さ・文法・語彙・一貫性を分析します。</p>
+      <ol class="sp-tasks">
+        <li><b class="mono">01</b><div><b class="jp">音読</b><small class="jp">表示された英文を読む（〜25秒）</small></div></li>
+        <li><b class="mono">02</b><div><b class="jp">リテル</b><small class="jp">短い文を覚え、自分の言葉で言い直す</small></div></li>
+        <li><b class="mono">03</b><div><b class="jp">自由発話</b><small class="jp">トピックについて30〜45秒話す</small></div></li>
+      </ol>
+      <p class="sp-mic jp">🎙 マイクの使用を許可してください。音声は分析のためだけに使われ、保存されません。</p>
+    </div>
+    <div class="actions">
+      <button class="btn primary jp" onclick="beginSpeaking()">はじめる</button>
+    </div>
+  </section>
+
+  <!-- ================= SPEAKING: TASK ================= -->
+  <section id="speak" class="screen">
+    <div class="testbar">
+      <button class="back" onclick="quitSpeaking()" aria-label="やめる">✕</button>
+      <div class="progress"><i id="spProg"></i></div>
+      <div class="timer" id="spClock">0:00</div>
+    </div>
+    <div class="qmeta">
+      <span class="n" id="spN">TASK 1 / 3</span>
+      <span class="sec" id="spTag">READ</span>
+    </div>
+    <div id="spBody"></div>
+  </section>
+
+  <!-- ================= SPEAKING: REPORT ================= -->
+  <section id="speak_report" class="screen">
+    <div class="brand"><div class="mark"></div><b>English&nbsp;Lab</b><span class="tag">speaking</span></div>
+    <div class="rep-head">
+      <div class="lbl">Speaking Report</div>
+      <div class="date mono" id="spDate"></div>
+    </div>
+    <div class="overall">
+      <div class="cefr mono" id="spCefr">B1</div>
+      <div class="meta"><div class="name jp" id="spName"></div><div class="sub jp" id="spSummary"></div></div>
+    </div>
+    <div id="spDemoBadge" class="sp-demo" style="display:none">DEMO モード — API未接続のためサンプル評価です</div>
+
+    <div class="grid2">
+      <div class="cell hl"><b class="mono" id="spScore">—</b><small>LAB SCORE</small></div>
+      <div class="cell"><b class="mono" id="spWpm">—</b><small>WPM</small></div>
+      <div class="cell"><b class="mono" id="spWords">—</b><small>WORDS</small></div>
+    </div>
+
+    <div class="sec-h">観点別分析</div>
+    <div class="skills" id="spDims"></div>
+
+    <div class="findings">
+      <h3>所見 / Findings</h3>
+      <div id="spStrengths"></div>
+      <div id="spImprove"></div>
+    </div>
+
+    <div class="sec-h" style="margin-top:22px">解答の記録</div>
+    <div class="steps" id="spTranscripts"></div>
+
+    <div class="actions">
+      <button class="btn primary jp" onclick="startSpeaking()">もう一度分析する</button>
+      <button class="btn ghost jp" onclick="goHome()">ホームに戻る</button>
+    </div>
+    <p class="fine">SIMPLIFIED ESTIMATE · PRONUNCIATION SCORED VIA TRANSCRIPTION PROXY</p>
+  </section>
+
+</div>
+
+<script>
+/* =========================================================
+   CEFR TAGGING — per-word 方式（正）／出典
+   ---------------------------------------------------------
+   単語の難易度は「カテゴリ」ではなく、検証済み語彙リストの
+   付与レベルを1語ずつ使う:
+     A1〜B2 : CEFR-J Wordlist v1.6（東京外大 投野研究室）
+     C1/C2  : Octanove Vocabulary Profile C1/C2
+   両者は headword/pos/CEFR の同一スキーマ。統合すると
+   A1〜C2 で 8,204語（A1:1002 A2:1165 B1:2026 B2:2280
+   C1:890 C2:841）。本アプリの単語プールはこの収録語から選定。
+   ---------------------------------------------------------
+   tagWord: item.cefr（リスト由来）を最優先。無い時のみ保険。
+   ========================================================= */
+const TOEFL_IBT_TO_CEFR = { 'iBT40':'B1','iBT60':'B2','iBT80':'B2','iBT100':'C1' };
+function tagWord(item){
+  if(item.cefr) return item.cefr;                       // CEFR-J結合済みが正規ルート
+  if(item.category==='TOEFL' && item.toeflBand)         // iBT帯は難易度信号
+    return TOEFL_IBT_TO_CEFR[item.toeflBand] || 'B2';
+  console.warn('CEFR未付与の語(要タグ付け):', item.head); // カテゴリ推定はしない
+  return 'B1';
+}
+// 熟語: Sprout の IDIOM_CEFR(A2/B1/B2/C1) を使用。無ければ要タグ付け。
+function tagIdiom(item){ return item.cefr || 'B1'; }
+
+/* ---------------------------------------------------------
+   DATA INGESTION（Sprout差し込み口）
+   Sproutからエクスポートした配列を ingest() に渡すと、
+   帯別プール化され、そのまま出題されます。
+
+   ★単語には CEFR-J結合済みの cefr を必須で持たせる:
+   words = [{ head:'improve', pos:'v', cefr:'A2', ja:'改善する',
+              distractors:['悪化する','維持する','中止する'] }, ...]
+     （cefr は CEFR-J Wordlist を head+pos で結合して付与した値。
+      C1等でCEFR-J未収録の語は EVP / iBT帯 / 頻度で補完しておく）
+   idioms= [{ head:'give up', cefr:'B1', ja:'あきらめる',
+              distractors:['始める','続ける','手伝う'] }, ...]
+   grammar=[{ sent:'She ___ to school.', cefr:'A2', answer:'goes',
+              distractors:['go','going','gone'] }, ...]
+     （grammar の cefr は CEFR-J Grammar Profile で付与）
+--------------------------------------------------------- */
+let POOL = { word:[], idiom:[], grammar:[] };
+function normalize(list, kind){
+  return list.map(it=>{
+    const cefr = kind==='word'? tagWord(it) : kind==='idiom'? tagIdiom(it) : (it.cefr||'B1');
+    if(kind==='grammar'){
+      const opts=[it.answer,...it.distractors]; const order=shuffle(opts.map((t,i)=>({t,i})));
+      return {sec:'grammar',cefr,sent:it.sent,c:order.map(o=>o.t),a:order.findIndex(o=>o.i===0)};
+    }
+    const opts=[it.ja,...it.distractors]; const order=shuffle(opts.map((t,i)=>({t,i})));
+    return {sec:kind,cefr,head:it.head,c:order.map(o=>o.t),a:order.findIndex(o=>o.i===0)};
+  });
+}
+function ingest(words, idioms, grammar){
+  POOL.word    = normalize(words,'word');
+  POOL.idiom   = normalize(idioms,'idiom');
+  POOL.grammar = normalize(grammar,'grammar');
+}
+
+/* =========================================================
+   SEED DATA — 動作確認用（Sprout差し込みまでの内蔵問題）
+   すでにタグ付け済みの形式で保持。ingest()で置換可能。
+   ========================================================= */
+/* 単語プール: CEFR-J Wordlist(A1-B2) + Octanove Vocabulary Profile(C1/C2)
+   の収録語から選定。cefr は各リストの付与値。correct は c[0]（実行時に
+   shuffleChoices でシャッフルされるので配置は不問）。各帯12語=計60語。 */
+const SEED_WORD=[
+ // ---- A1 ----
+ {sec:'word',cefr:'A1',head:'city',a:0,c:['都市','田舎','島','山']},
+ {sec:'word',cefr:'A1',head:'corner',a:0,c:['角・隅','中央','屋根','入口']},
+ {sec:'word',cefr:'A1',head:'forget',a:0,c:['忘れる','覚える','借りる','数える']},
+ {sec:'word',cefr:'A1',head:'fruit',a:0,c:['果物','野菜','穀物','肉']},
+ {sec:'word',cefr:'A1',head:'funny',a:0,c:['おかしい・面白い','悲しい','退屈な','難しい']},
+ {sec:'word',cefr:'A1',head:'hour',a:0,c:['1時間','1分','1日','1週間']},
+ {sec:'word',cefr:'A1',head:'jacket',a:0,c:['上着','靴','帽子','手袋']},
+ {sec:'word',cefr:'A1',head:'repeat',a:0,c:['繰り返す','始める','止める','忘れる']},
+ {sec:'word',cefr:'A1',head:'sing',a:0,c:['歌う','踊る','描く','走る']},
+ {sec:'word',cefr:'A1',head:'strong',a:0,c:['強い','弱い','遅い','軽い']},
+ {sec:'word',cefr:'A1',head:'teach',a:0,c:['教える','学ぶ','尋ねる','答える']},
+ {sec:'word',cefr:'A1',head:'tree',a:0,c:['木','花','草','石']},
+ {sec:'word',cefr:'A1',head:'child',a:0,c:['子供','大人','老人','赤ん坊']},
+ {sec:'word',cefr:'A1',head:'cloud',a:0,c:['雲','雨','雪','霧']},
+ {sec:'word',cefr:'A1',head:'family',a:0,c:['家族','友人','隣人','同僚']},
+ {sec:'word',cefr:'A1',head:'money',a:0,c:['お金','時間','力','知識']},
+ {sec:'word',cefr:'A1',head:'park',a:0,c:['公園','学校','病院','駅']},
+ {sec:'word',cefr:'A1',head:'sky',a:0,c:['空','海','山','地面']},
+ {sec:'word',cefr:'A1',head:'tired',a:0,c:['疲れた','元気な','退屈な','満腹の']},
+ {sec:'word',cefr:'A1',head:'young',a:0,c:['若い','年老いた','背の高い','賢い']},
+ // ---- A2 ----
+ {sec:'word',cefr:'A2',head:'audience',a:0,c:['観客・聴衆','選手','審判','監督']},
+ {sec:'word',cefr:'A2',head:'bargain',a:0,c:['お買い得品','高価な品','贈り物','借金']},
+ {sec:'word',cefr:'A2',head:'comfortable',a:0,c:['快適な','不便な','危険な','高価な']},
+ {sec:'word',cefr:'A2',head:'countryside',a:0,c:['田舎','都会','海岸','砂漠']},
+ {sec:'word',cefr:'A2',head:'furniture',a:0,c:['家具','衣類','食器','工具']},
+ {sec:'word',cefr:'A2',head:'graduate',a:0,c:['卒業する','入学する','退学する','進学する']},
+ {sec:'word',cefr:'A2',head:'purpose',a:0,c:['目的','結果','偶然','手段']},
+ {sec:'word',cefr:'A2',head:'success',a:0,c:['成功','失敗','挑戦','努力']},
+ {sec:'word',cefr:'A2',head:'wedding',a:0,c:['結婚式','葬式','誕生日','卒業式']},
+ {sec:'word',cefr:'A2',head:'worried',a:0,c:['心配して','安心して','満足して','退屈して']},
+ {sec:'word',cefr:'A2',head:'planet',a:0,c:['惑星','恒星','衛星','彗星']},
+ {sec:'word',cefr:'A2',head:'common',a:0,c:['よくある・共通の','珍しい','特別な','個人的な']},
+ {sec:'word',cefr:'A2',head:'calendar',a:0,c:['カレンダー','時計','地図','辞書']},
+ {sec:'word',cefr:'A2',head:'certain',a:0,c:['確かな・確信して','不確かな','退屈な','危険な']},
+ {sec:'word',cefr:'A2',head:'envelope',a:0,c:['封筒','切手','荷物','便箋']},
+ {sec:'word',cefr:'A2',head:'freeze',a:0,c:['凍る','溶ける','沸く','乾く']},
+ {sec:'word',cefr:'A2',head:'repair',a:0,c:['修理する','壊す','売る','隠す']},
+ {sec:'word',cefr:'A2',head:'society',a:0,c:['社会','個人','家庭','自然']},
+ {sec:'word',cefr:'A2',head:'steal',a:0,c:['盗む','与える','借りる','買う']},
+ {sec:'word',cefr:'A2',head:'tourist',a:0,c:['観光客','住民','案内人','商人']},
+ // ---- B1 ----
+ {sec:'word',cefr:'B1',head:'afford',a:0,c:['（金銭的に）～する余裕がある','～を禁じる','～を借りる','～を避ける']},
+ {sec:'word',cefr:'B1',head:'arrange',a:0,c:['手配する・整える','中止する','忘れる','壊す']},
+ {sec:'word',cefr:'B1',head:'confirm',a:0,c:['確認する','否定する','疑う','隠す']},
+ {sec:'word',cefr:'B1',head:'cure',a:0,c:['治す','悪化させる','診断する','予防する']},
+ {sec:'word',cefr:'B1',head:'destination',a:0,c:['目的地','出発地','経路','距離']},
+ {sec:'word',cefr:'B1',head:'individual',a:0,c:['個人','集団','組織','社会']},
+ {sec:'word',cefr:'B1',head:'persuade',a:0,c:['説得する','命令する','拒否する','無視する']},
+ {sec:'word',cefr:'B1',head:'region',a:0,c:['地域','期間','数量','方法']},
+ {sec:'word',cefr:'B1',head:'reject',a:0,c:['拒否する','受け入れる','提案する','承認する']},
+ {sec:'word',cefr:'B1',head:'rely',a:0,c:['頼る','疑う','争う','断る']},
+ {sec:'word',cefr:'B1',head:'suppose',a:0,c:['～だと思う・推測する','証明する','断言する','否定する']},
+ {sec:'word',cefr:'B1',head:'vast',a:0,c:['広大な','狭い','空の','短い']},
+ {sec:'word',cefr:'B1',head:'confidence',a:0,c:['自信','不安','疑い','恐怖']},
+ {sec:'word',cefr:'B1',head:'decrease',a:0,c:['減少する','増加する','維持する','変動する']},
+ {sec:'word',cefr:'B1',head:'define',a:0,c:['定義する','曖昧にする','否定する','引用する']},
+ {sec:'word',cefr:'B1',head:'estimate',a:0,c:['見積もる','確定する','支払う','記録する']},
+ {sec:'word',cefr:'B1',head:'hesitate',a:0,c:['ためらう','決断する','急ぐ','拒む']},
+ {sec:'word',cefr:'B1',head:'occur',a:0,c:['起こる','消える','続く','終わる']},
+ {sec:'word',cefr:'B1',head:'option',a:0,c:['選択肢','義務','結論','制限']},
+ {sec:'word',cefr:'B1',head:'respond',a:0,c:['応答する','無視する','質問する','中断する']},
+ // ---- B2 ----
+ {sec:'word',cefr:'B2',head:'blossom',a:0,c:['（花が）咲く','枯れる','種をまく','収穫する']},
+ {sec:'word',cefr:'B2',head:'contaminate',a:0,c:['汚染する','浄化する','消毒する','保存する']},
+ {sec:'word',cefr:'B2',head:'convert',a:0,c:['変換する','維持する','破壊する','複製する']},
+ {sec:'word',cefr:'B2',head:'courtesy',a:0,c:['礼儀正しさ','無礼','冷淡','傲慢']},
+ {sec:'word',cefr:'B2',head:'donate',a:0,c:['寄付する','借りる','販売する','徴収する']},
+ {sec:'word',cefr:'B2',head:'enforce',a:0,c:['（法を）施行する・強制する','廃止する','違反する','免除する']},
+ {sec:'word',cefr:'B2',head:'grasp',a:0,c:['把握する・つかむ','手放す','見失う','忘れる']},
+ {sec:'word',cefr:'B2',head:'outcome',a:0,c:['結果','原因','過程','目的']},
+ {sec:'word',cefr:'B2',head:'procedure',a:0,c:['手順','結果','目的','例外']},
+ {sec:'word',cefr:'B2',head:'refrain',a:0,c:['控える','続ける','促す','強いる']},
+ {sec:'word',cefr:'B2',head:'retreat',a:0,c:['退却する','前進する','攻撃する','占領する']},
+ {sec:'word',cefr:'B2',head:'superb',a:0,c:['見事な','平凡な','ひどい','粗末な']},
+ {sec:'word',cefr:'B2',head:'adequate',a:0,c:['十分な','不十分な','過剰な','曖昧な']},
+ {sec:'word',cefr:'B2',head:'commute',a:0,c:['通勤する','引っ越す','出張する','休職する']},
+ {sec:'word',cefr:'B2',head:'compatible',a:0,c:['互換性のある','相反する','独立した','一時的な']},
+ {sec:'word',cefr:'B2',head:'demolish',a:0,c:['取り壊す','建設する','修復する','拡張する']},
+ {sec:'word',cefr:'B2',head:'external',a:0,c:['外部の','内部の','中心の','個人の']},
+ {sec:'word',cefr:'B2',head:'implement',a:0,c:['実行する','計画する','中止する','提案する']},
+ {sec:'word',cefr:'B2',head:'opponent',a:0,c:['対戦相手','味方','観客','審判']},
+ {sec:'word',cefr:'B2',head:'urban',a:0,c:['都市の','田舎の','郊外の','沿岸の']},
+ // ---- C1 ----
+ {sec:'word',cefr:'C1',head:'apprentice',a:0,c:['見習い','熟練者','監督者','顧客']},
+ {sec:'word',cefr:'C1',head:'comply',a:0,c:['（規則に）従う','違反する','反抗する','無視する']},
+ {sec:'word',cefr:'C1',head:'confide',a:0,c:['打ち明ける','隠す','疑う','否定する']},
+ {sec:'word',cefr:'C1',head:'constraint',a:0,c:['制約','自由','許可','拡大']},
+ {sec:'word',cefr:'C1',head:'daunting',a:0,c:['ひるませる・手ごわい','容易な','楽しい','退屈な']},
+ {sec:'word',cefr:'C1',head:'detest',a:0,c:['ひどく嫌う','熱望する','称賛する','許す']},
+ {sec:'word',cefr:'C1',head:'hostile',a:0,c:['敵対的な','友好的な','中立の','無関心な']},
+ {sec:'word',cefr:'C1',head:'impediment',a:0,c:['障害','促進','利点','手段']},
+ {sec:'word',cefr:'C1',head:'inherent',a:0,c:['本来備わっている','後天的な','一時的な','偶発的な']},
+ {sec:'word',cefr:'C1',head:'relinquish',a:0,c:['放棄する','獲得する','維持する','主張する']},
+ {sec:'word',cefr:'C1',head:'resilient',a:0,c:['回復力のある','もろい','頑固な','消極的な']},
+ {sec:'word',cefr:'C1',head:'sacrifice',a:0,c:['犠牲にする','保護する','獲得する','節約する']},
+ {sec:'word',cefr:'C1',head:'benign',a:0,c:['良性の・温和な','悪性の','危険な','攻撃的な']},
+ {sec:'word',cefr:'C1',head:'bribe',a:0,c:['賄賂を贈る','報酬を払う','寄付する','罰する']},
+ {sec:'word',cefr:'C1',head:'credible',a:0,c:['信頼できる','疑わしい','架空の','不明瞭な']},
+ {sec:'word',cefr:'C1',head:'lapse',a:0,c:['（時間の）経過・失効','継続','開始','更新']},
+ {sec:'word',cefr:'C1',head:'latent',a:0,c:['潜在的な','顕在的な','一時的な','明白な']},
+ {sec:'word',cefr:'C1',head:'superficial',a:0,c:['表面的な','本質的な','徹底的な','詳細な']},
+ {sec:'word',cefr:'C1',head:'tranquil',a:0,c:['静穏な','騒がしい','混乱した','危険な']},
+ {sec:'word',cefr:'C1',head:'wary',a:0,c:['用心深い','軽率な','無関心な','大胆な']},
+];
+const SEED_IDIOM=[
+ // ---- A2 ----
+ {sec:'idiom',cefr:'A2',head:'get up',a:0,c:['起きる','座る','転ぶ','立ち止まる']},
+ {sec:'idiom',cefr:'A2',head:'look for ~',a:0,c:['~を探す','~を見つける','~を見る','~を失う']},
+ {sec:'idiom',cefr:'A2',head:'wait for ~',a:0,c:['~を待つ','~を追う','~を呼ぶ','~を逃す']},
+ {sec:'idiom',cefr:'A2',head:'turn on ~',a:0,c:['(明かりを)つける','(明かりを)消す','~を開ける','~を閉める']},
+ {sec:'idiom',cefr:'A2',head:'put on ~',a:0,c:['(服を)着る','(服を)脱ぐ','~を洗う','~をたたむ']},
+ {sec:'idiom',cefr:'A2',head:'get on ~',a:0,c:['~に乗る','~から降りる','~を降ろす','~を運転する']},
+ {sec:'idiom',cefr:'A2',head:'a lot of ~',a:0,c:['たくさんの~','少しの~','全くない~','半分の~']},
+ {sec:'idiom',cefr:'A2',head:'come from ~',a:0,c:['~出身である','~へ向かう','~を訪れる','~に住む']},
+ // ---- B1 ----
+ {sec:'idiom',cefr:'B1',head:'give up',a:0,c:['あきらめる','始める','続ける','手伝う']},
+ {sec:'idiom',cefr:'B1',head:'run out of ~',a:0,c:['~を使い果たす','~を補充する','~を節約する','~を買いだめする']},
+ {sec:'idiom',cefr:'B1',head:'take part in ~',a:0,c:['~に参加する','~を欠席する','~を主催する','~を観戦する']},
+ {sec:'idiom',cefr:'B1',head:'look forward to ~',a:0,c:['~を楽しみに待つ','~を恐れる','~を後悔する','~を忘れる']},
+ {sec:'idiom',cefr:'B1',head:'deal with ~',a:0,c:['~に対処する','~を無視する','~を引き起こす','~を避ける']},
+ {sec:'idiom',cefr:'B1',head:'come up with ~',a:0,c:['~を思いつく','~を実行する','~を却下する','~を見逃す']},
+ {sec:'idiom',cefr:'B1',head:'figure out ~',a:0,c:['~を理解する・解明する','~を見落とす','~を隠す','~を複雑にする']},
+ {sec:'idiom',cefr:'B1',head:'get along with ~',a:0,c:['~と仲良くやる','~と争う','~を避ける','~を無視する']},
+ // ---- B2 ----
+ {sec:'idiom',cefr:'B2',head:'put up with ~',a:0,c:['~を我慢する','~を楽しむ','~を取り除く','~を引き起こす']},
+ {sec:'idiom',cefr:'B2',head:'get the hang of ~',a:0,c:['~のコツをつかむ','~をあきらめる','~を忘れる','~を教える']},
+ {sec:'idiom',cefr:'B2',head:'run into ~',a:0,c:['~に偶然出会う','~を避ける','~を探す','~と別れる']},
+ {sec:'idiom',cefr:'B2',head:'call off ~',a:0,c:['~を中止する','~を延期する','~を始める','~を宣伝する']},
+ {sec:'idiom',cefr:'B2',head:'turn down ~',a:0,c:['~を断る','~を受け入れる','~を提案する','~を要求する']},
+ {sec:'idiom',cefr:'B2',head:'come across ~',a:0,c:['~に偶然出くわす','~を計画する','~を隠す','~を作り出す']},
+ {sec:'idiom',cefr:'B2',head:'look down on ~',a:0,c:['~を見下す','~を尊敬する','~を心配する','~を頼る']},
+ {sec:'idiom',cefr:'B2',head:'bring about ~',a:0,c:['~を引き起こす','~を防ぐ','~を遅らせる','~を予測する']},
+ // ---- C1 ----
+ {sec:'idiom',cefr:'C1',head:'cut corners',a:0,c:['手を抜く','丁寧にやる','近道を探す','角を曲がる']},
+ {sec:'idiom',cefr:'C1',head:'beat around the bush',a:0,c:['遠回しに言う','率直に言う','大声で言う','繰り返す']},
+ {sec:'idiom',cefr:'C1',head:'bite the bullet',a:0,c:['覚悟して立ち向かう','先延ばしにする','逃げ出す','助けを求める']},
+ {sec:'idiom',cefr:'C1',head:'get cold feet',a:0,c:['怖じ気づく','勇気を出す','風邪をひく','冷静になる']},
+ {sec:'idiom',cefr:'C1',head:'pull strings',a:0,c:['コネを使う','正々堂々とやる','楽器を弾く','契約を破る']},
+ {sec:'idiom',cefr:'C1',head:'break the ice',a:0,c:['場の緊張をほぐす','議論を始める','秘密を明かす','関係を壊す']},
+ {sec:'idiom',cefr:'C1',head:'sit on the fence',a:0,c:['どっちつかずの態度をとる','明確に決める','積極的に関わる','率直に述べる']},
+ {sec:'idiom',cefr:'C1',head:'let the cat out of the bag',a:0,c:['うっかり秘密を漏らす','秘密を守る','嘘をつく','冗談を言う']},
+];
+const SEED_GRAMMAR=[
+ // ---- A2 ----
+ {sec:'grammar',cefr:'A2',type:'時制',sent:'She ___ to school every day.',a:0,c:['goes','go','going','gone']},
+ {sec:'grammar',cefr:'A2',type:'一致',sent:'There ___ two books on the table.',a:0,c:['are','is','be','am']},
+ {sec:'grammar',cefr:'A2',type:'前置詞',sent:'He is good ___ tennis.',a:0,c:['at','on','in','to']},
+ {sec:'grammar',cefr:'A2',type:'前置詞',sent:'I have lived here ___ 2010.',a:0,c:['since','for','from','at']},
+ {sec:'grammar',cefr:'A2',type:'時制',sent:'They ___ watching TV now.',a:0,c:['are','is','am','be']},
+ {sec:'grammar',cefr:'A2',type:'冠詞',sent:'I bought ___ umbrella yesterday.',a:0,c:['an','a','the','some']},
+ {sec:'grammar',cefr:'A2',type:'前置詞',sent:'The meeting is ___ Monday.',a:0,c:['on','in','at','to']},
+ {sec:'grammar',cefr:'A2',type:'比較',sent:'This box is ___ than that one.',a:0,c:['heavier','heavy','heaviest','more heavy']},
+ {sec:'grammar',cefr:'A2',type:'助動詞',sent:'___ you help me, please?',a:0,c:['Can','Do','Are','Is']},
+ {sec:'grammar',cefr:'A2',type:'語法',sent:"I'm interested ___ music.",a:0,c:['in','on','at','for']},
+ // ---- B1 ----
+ {sec:'grammar',cefr:'B1',type:'仮定法',sent:'If it ___ tomorrow, we will stay home.',a:0,c:['rains','will rain','rained','rain']},
+ {sec:'grammar',cefr:'B1',type:'前置詞',sent:'She has studied English ___ three years.',a:0,c:['for','since','during','from']},
+ {sec:'grammar',cefr:'B1',type:'関係詞',sent:'The book ___ I bought is interesting.',a:0,c:['which','who','where','whose']},
+ {sec:'grammar',cefr:'B1',type:'準動詞',sent:"I'm looking forward ___ you.",a:0,c:['to seeing','to see','seeing','see']},
+ {sec:'grammar',cefr:'B1',type:'助動詞',sent:'You ___ finish it by Friday.',a:0,c:['must','can','may','would']},
+ {sec:'grammar',cefr:'B1',type:'接続詞',sent:'___ he was tired, he kept working.',a:0,c:['Although','Because','Unless','So']},
+ {sec:'grammar',cefr:'B1',type:'準動詞',sent:'I enjoy ___ books.',a:0,c:['reading','to read','read','to reading']},
+ {sec:'grammar',cefr:'B1',type:'関係詞',sent:'The man ___ lives next door is a doctor.',a:0,c:['who','which','whom','whose']},
+ {sec:'grammar',cefr:'B1',type:'完了時制',sent:'I ___ never been to Paris.',a:0,c:['have','am','did','was']},
+ {sec:'grammar',cefr:'B1',type:'接続詞',sent:'Take an umbrella ___ it rains.',a:0,c:['in case','in spite','as long','even so']},
+ {sec:'grammar',cefr:'B1',type:'比較',sent:'She runs as ___ as her brother.',a:0,c:['fast','faster','fastest','more fast']},
+ {sec:'grammar',cefr:'B1',type:'受動態',sent:'This song ___ by many people.',a:0,c:['is loved','loves','loving','love']},
+ // ---- B2 ----
+ {sec:'grammar',cefr:'B2',type:'完了時制',sent:'By the time we arrived, the movie ___.',a:0,c:['had already started','already started','has started','starts']},
+ {sec:'grammar',cefr:'B2',type:'仮定法',sent:"I'd rather you ___ smoke here.",a:0,c:["didn't",'not',"won't","don't"]},
+ {sec:'grammar',cefr:'B2',type:'仮定法',sent:'It is high time we ___ home.',a:0,c:['went','go','have gone','going']},
+ {sec:'grammar',cefr:'B2',type:'関係詞',sent:'The plan, ___ deadline is Monday, is late.',a:0,c:['whose','which','that','who']},
+ {sec:'grammar',cefr:'B2',type:'語法',sent:'He talks as if he ___ everything.',a:0,c:['knew','knows','know','has known']},
+ {sec:'grammar',cefr:'B2',type:'受動態',sent:'The letter ___ yesterday.',a:0,c:['was sent','sent','has sent','sends']},
+ {sec:'grammar',cefr:'B2',type:'分詞',sent:'___ from the plane, the city looked small.',a:0,c:['Seen','Seeing','To see','See']},
+ {sec:'grammar',cefr:'B2',type:'仮定法',sent:'I wish I ___ more free time.',a:0,c:['had','have','has','will have']},
+ {sec:'grammar',cefr:'B2',type:'接続詞',sent:'___ being tired, she finished the work.',a:0,c:['Despite','Although','Because','However']},
+ {sec:'grammar',cefr:'B2',type:'準動詞',sent:'On his way home, he stopped ___ some milk.',a:0,c:['to buy','buying','buy','bought']},
+ {sec:'grammar',cefr:'B2',type:'助動詞',sent:'She ___ be tired; she worked all day.',a:0,c:['must','can','need','will']},
+ {sec:'grammar',cefr:'B2',type:'比較',sent:"This is by far ___ movie I've seen.",a:0,c:['the best','best','better','the better']},
+ // ---- C1 ----
+ {sec:'grammar',cefr:'C1',type:'倒置強調',sent:'Not only ___ late, but he also forgot it.',a:0,c:['was he','he was','did he','he did']},
+ {sec:'grammar',cefr:'C1',type:'倒置強調',sent:'Little ___ that she was being watched.',a:0,c:['did she know','she knew','she did know','knew she']},
+ {sec:'grammar',cefr:'C1',type:'倒置強調',sent:'Seldom ___ such dedication.',a:0,c:['have I seen','I have seen','I saw','did I saw']},
+ {sec:'grammar',cefr:'C1',type:'倒置強調',sent:'___ as it may seem, the theory holds.',a:0,c:['Strange','Strangely','However strange','As strange']},
+ {sec:'grammar',cefr:'C1',type:'仮定法',sent:'Were it not ___ your help, we would fail.',a:0,c:['for','of','to','with']},
+ {sec:'grammar',cefr:'C1',type:'倒置強調',sent:'No sooner ___ he arrived than it began to rain.',a:0,c:['had','did','has','was']},
+ {sec:'grammar',cefr:'C1',type:'分詞',sent:'___ finished his work, he went home.',a:0,c:['Having','Have','Had','To have']},
+ {sec:'grammar',cefr:'C1',type:'関係詞',sent:'The house ___ which he lives is old.',a:0,c:['in','on','at','for']},
+];
+POOL={word:SEED_WORD.slice(),idiom:SEED_IDIOM.slice(),grammar:SEED_GRAMMAR.slice()};
+
+/* =========================================================
+   CEFR constants
+   ========================================================= */
+const BAND_ORDER=['A1','A2','B1','B2','C1'];
+const BAND_NUM={'Pre-A1':0,A1:1,A2:2,B1:3,B2:4,C1:5};
+const NUM_BAND={0:'Pre-A1',1:'A1',2:'A2',3:'B1',4:'B2',5:'C1'};
+const WEIGHT={A1:1,A2:2,B1:3,B2:4,C1:5};
+const CEFR_NAME={'Pre-A1':'入門前',A1:'入門レベル',A2:'初級レベル',B1:'中級レベル',B2:'中上級レベル',C1:'上級レベル'};
+const CEFR_SUB={
+ 'Pre-A1':'ごく基礎から。まずは頻出語から。',
+ A1:'基礎の入口。定型表現が中心。',A2:'日常の基本を扱える。',
+ B1:'自立して使える中級者。',B2:'実用レベルで幅広く対応。',C1:'熟達に近い運用力。'
+};
+// 出題設計: 各帯の抽出数（単語はA1〜C1の5帯／熟語・文法はA2〜C1）
+const PLAN={word:{A1:4,A2:4,B1:4,B2:4,C1:4}, idiom:{A2:3,B1:3,B2:2,C1:2}, grammar:{A2:5,B1:5,B2:5,C1:5}};
+
+function shuffle(a){a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a}
+function shuffleChoices(q){ // 選択肢の並びをランダム化し正解indexを追従
+  const order=shuffle(q.c.map((t,i)=>({t,i})));
+  return {...q, c:order.map(o=>o.t), a:order.findIndex(o=>o.i===q.a)};
+}
+function pickPerBand(pool,plan){
+  const out=[];
+  for(const band of BAND_ORDER){
+    if(!plan[band]) continue;
+    const inBand=shuffle(pool.filter(q=>q.cefr===band));
+    out.push(...inBand.slice(0,plan[band]));
+  }
+  return shuffle(out);
+}
+// 文法は種類(type)が偏らないよう、帯ごとに種類分散で抽出
+function pickGrammar(pool,plan){
+  const out=[];
+  for(const band of BAND_ORDER){
+    if(!plan[band]) continue;
+    const inBand=shuffle(pool.filter(q=>q.cefr===band));
+    const seen=new Set(), chosen=[];
+    for(const q of inBand){ if(chosen.length>=plan[band])break; if(!seen.has(q.type)){seen.add(q.type);chosen.push(q);} }
+    for(const q of inBand){ if(chosen.length>=plan[band])break; if(!chosen.includes(q))chosen.push(q); } // 不足分を補充
+    out.push(...chosen);
+  }
+  return shuffle(out);
+}
+
+/* =========================================================
+   TEST STATE
+   ========================================================= */
+let quiz=[], idx=0, answers=[], t0=0, timerId=null;
+const SEC_TAG={word:'LEXIS',idiom:'IDIOM',grammar:'GRAMMAR'};
+const SEC_LEAD={word:'この語の意味は？',idiom:'この熟語の意味は？'};
+
+function buildQuiz(){
+  return [
+    ...pickPerBand(POOL.word,   PLAN.word),
+    ...pickPerBand(POOL.idiom,  PLAN.idiom),
+    ...pickGrammar(POOL.grammar,PLAN.grammar),
+  ].map(shuffleChoices);
+}
+function startTest(){
+  quiz=buildQuiz(); idx=0; answers=new Array(quiz.length);
+  show('test'); t0=Date.now(); startTimer(); renderQ();
+}
+function startTimer(){
+  clearInterval(timerId);
+  timerId=setInterval(()=>{
+    const s=Math.floor((Date.now()-t0)/1000);
+    document.getElementById('timer').textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  },500);
+}
+const answeredCount=()=>answers.filter(x=>x).length;
+const allAnswered=()=>answeredCount()===quiz.length;
+
+function renderQ(){
+  const q=quiz[idx];
+  document.getElementById('prog').style.width=`${(answeredCount()/quiz.length)*100}%`;
+  document.getElementById('qn').textContent=`Q${idx+1} / ${quiz.length}`;
+  document.getElementById('qsec').textContent=SEC_TAG[q.sec];
+  const card=document.getElementById('qcard');
+  if(q.sec==='grammar'){
+    card.innerHTML=`<div class="lead">空所に入る語を選んでください</div>
+      <div class="sentence">${q.sent.replace('___','<span class="blank">?</span>')}</div>`;
+  }else{
+    card.innerHTML=`<div class="lead">${SEC_LEAD[q.sec]}</div><div class="headword">${q.head}</div>`;
+  }
+  const box=document.getElementById('choices'); box.innerHTML='';
+  const keys=['A','B','C','D'];
+  const prev=answers[idx];
+  q.c.forEach((txt,ci)=>{
+    const b=document.createElement('button');
+    b.className='choice'+(prev&&!prev.dk&&prev.pick===ci?' picked':'');
+    b.innerHTML=`<span class="key">${keys[ci]}</span><span class="txt">${txt}</span>`;
+    b.onclick=()=>pick(ci,false);
+    box.appendChild(b);
+  });
+  const dk=document.getElementById('dkBtn');
+  dk.className='dk jp'+(prev&&prev.dk?' picked':''); dk.textContent='わからない';
+  dk.onclick=()=>pick(-1,true);
+  updateNav();
+}
+function updateNav(){
+  const prevB=document.getElementById('prevBtn'), nextB=document.getElementById('nextBtn');
+  prevB.disabled = idx===0;
+  const last = idx===quiz.length-1;
+  if(last){
+    nextB.textContent='採点する ✓'; nextB.className='navbtn next finish jp';
+    nextB.disabled = !allAnswered();
+  }else{
+    nextB.textContent='次へ ›'; nextB.className='navbtn next jp';
+    nextB.disabled = !answers[idx];
+  }
+}
+function pick(ci,isDK){
+  const firstTime=!answers[idx];
+  const q=quiz[idx];
+  answers[idx]={sec:q.sec,cefr:q.cefr,type:q.type||null,pick:isDK?-1:ci,correct:(!isDK&&ci===q.a),dk:!!isDK};
+  renderQ();
+  if(firstTime && idx<quiz.length-1){ setTimeout(()=>{ idx++; renderQ(); },170); }
+}
+function goPrev(){ if(idx>0){ idx--; renderQ(); } }
+function goNext(){ if(idx<quiz.length-1){ idx++; renderQ(); } else if(allAnswered()){ finish(); } }
+function quitTest(){ if(confirm('分析をやめてホームに戻りますか？')){clearInterval(timerId);goHome();} }
+
+/* ---------- 解答レビュー ---------- */
+function openReview(){
+  const list=document.getElementById('revList'); list.innerHTML='';
+  let ok=0;
+  quiz.forEach((q,i)=>{
+    const a=answers[i]; const correct=!!(a&&a.correct); if(correct)ok++;
+    const prompt = q.sec==='grammar'
+      ? q.sent.replace('___','<b>____</b>')
+      : `<b>${q.head}</b>`;
+    const youText = !a?'—':(a.dk?'わからない':q.c[a.pick]);
+    const typeTag = q.type? ' · '+q.type : '';
+    const mark = correct?'✓ 正解':(a&&a.dk?'△ わからない':'✗ 不正解');
+    const el=document.createElement('div');
+    el.className='rev-item'+(correct?'':' ng');
+    el.innerHTML=`
+      <div class="rh">
+        <span class="rn">Q${i+1}</span>
+        <span class="rtag">${SEC_TAG[q.sec]} · ${q.cefr}${typeTag}</span>
+        <span class="rmark ${correct?'ok':'ng'}">${mark}</span>
+      </div>
+      <div class="rq">${prompt}</div>
+      <div class="ra">
+        <div class="you ${correct?'':(a&&a.dk?'dk':'ng')}">あなた: ${youText}</div>
+        ${correct?'':`<div class="cor">正解: ${q.c[q.a]}</div>`}
+      </div>`;
+    list.appendChild(el);
+  });
+  document.getElementById('revSummary').innerHTML=
+    `<span class="ok">正解 <b>${ok}</b></span><span class="ng">不正解 <b>${quiz.length-ok}</b></span><span>計 <b>${quiz.length}</b></span>`;
+  show('review'); window.scrollTo(0,0);
+}
+
+/* =========================================================
+   SCORING — 分野ごと mastery-threshold 方式（「わからない」は不正解扱い）
+   ========================================================= */
+function estimateSkill(rows){
+  const bb={}; BAND_ORDER.forEach(b=>bb[b]={n:0,ok:0});
+  rows.forEach(r=>{bb[r.cefr].n++; if(r.correct)bb[r.cefr].ok++;});
+  const acc=b=>bb[b].n? bb[b].ok/bb[b].n : null;
+  const present=BAND_ORDER.filter(b=>bb[b].n>0);   // 出題された帯だけ（区間可変対応）
+  // 下から連続で0.6以上 合格した最高帯を到達レベルに
+  let passedTo=null;
+  for(const b of present){ if(acc(b)>=0.6) passedTo=b; else break; }
+  let level, num, plus=false, cont;
+  if(passedTo===null){
+    const low=present[0], la=acc(low);
+    if(la>=0.4){ level=low+'-'; num=BAND_NUM[low]-0.4; }          // 最下帯の手前
+    else { num=BAND_NUM[low]-1; level=(num<1?'Pre-A1':NUM_BAND[num]); } // さらに下
+    cont=Math.max(0.5,num);
+  }else{
+    level=passedTo; num=BAND_NUM[passedTo]; cont=num;
+    const i=present.indexOf(passedTo);
+    if(i<present.length-1){                                       // 次帯の手応えで連続値を補正
+      const nv=acc(present[i+1]);
+      cont=num+Math.max(0,Math.min(1,nv))*0.9;
+      if(nv>=0.4 && nv<0.6) plus=true;
+    }
+  }
+  const ok=rows.filter(r=>r.correct).length;
+  const dk=rows.filter(r=>r.dk).length;
+  return {level,num,cont,plus,acc:ok/rows.length,dk,n:rows.length};
+}
+function grade(){
+  const secs=['word','idiom','grammar'], skills={};
+  secs.forEach(s=>skills[s]=estimateSkill(answers.filter(a=>a.sec===s)));
+  const contAvg=(skills.word.cont+skills.idiom.cont+skills.grammar.cont)/3;
+  const ovNum=Math.max(0,Math.min(5,Math.round(contAvg)));
+  const ovBand=contAvg<1? 'Pre-A1' : NUM_BAND[Math.max(1,ovNum)];
+  const ovPlus=(contAvg-Math.round(contAvg))>=0.4 && contAvg<5;
+  let earn=0,tot=0; answers.forEach(a=>{const w=WEIGHT[a.cefr];tot+=w;if(a.correct)earn+=w;});
+  const score=Math.round(earn/tot*1000);
+  const acc=Math.round(answers.filter(a=>a.correct).length/answers.length*100);
+  const dkTotal=answers.filter(a=>a.dk).length;
+  const weak=secs.reduce((m,s)=>skills[s].cont<skills[m].cont?s:m,'word');
+  return {skills,ovBand,ovPlus,contAvg,score,acc,weak,dkTotal};
+}
+
+/* ---------- recommendations（中立表現・独立アプリ想定） ---------- */
+const SEC_JA={word:'語彙',idiom:'熟語',grammar:'文法'};
+function stepsFor(res){
+  const order=['word','idiom','grammar'].sort((a,b)=>res.skills[a].cont-res.skills[b].cont);
+  const lv=s=>{const L=res.skills[s].level; return L==='Pre-A1'?'A1':L.replace('-','');};
+  const make=s=>{
+    if(s==='word')   return {t:`語彙トレーニング（${lv(s)}帯）`, d:'フラッシュカードと4択で反復。弱い帯を集中的に。'};
+    if(s==='idiom')  return {t:`熟語・語法の演習（${lv(s)}）`, d:'前置詞／助詞の穴埋め（Part 5形式）で語法を固める。'};
+    return {t:'文法パターン演習', d:'誤答した構文を型ごとに再演習。仮定法・倒置は重点的に。'};
+  };
+  const out = order.map((s,i)=>{const m=make(s); if(i===0)m.d='まずここから。 '+m.d; return m;});
+  out.push({t:'発話トレーニング（準備中）', d:'測定レベルに合わせた会話練習で、使える力へ変換。'});
+  return out.slice(0,4);
+}
+
+/* =========================================================
+   RESULT
+   ========================================================= */
+function finish(){
+  clearInterval(timerId);
+  const elapsed=Math.floor((Date.now()-t0)/1000);
+  const res=grade();
+  renderResult(res,elapsed);
+  saveResult(res,elapsed);
+  show('result'); window.scrollTo(0,0);
+}
+const fmtLv=lv=> lv==='Pre-A1' ? 'Pre-A1' : (lv&&lv.endsWith('-') ? lv.slice(0,-1)+'手前' : lv);
+const posPct=cont=>Math.max(3,Math.min(97,((cont-1)/4)*100)); // 1..5 → 0..100
+
+function renderResult(res,elapsed){
+  document.getElementById('repDate').textContent=new Date().toISOString().slice(0,10).replace(/-/g,'.');
+  document.getElementById('ovCefr').firstChild.textContent=res.ovBand;
+  document.getElementById('ovPlus').textContent=res.ovPlus?'+':'';
+  document.getElementById('ovName').textContent=CEFR_NAME[res.ovBand];
+  document.getElementById('ovSub').textContent=CEFR_SUB[res.ovBand];
+
+  // spectrum needle + skill plots
+  const needle=document.getElementById('needle');
+  requestAnimationFrame(()=>setTimeout(()=>{needle.style.left=posPct(res.contAvg)+'%';},80));
+  const plots=document.getElementById('plots'); plots.innerHTML='';
+  const names={word:'語彙',idiom:'熟語',grammar:'文法'};
+  ['word','idiom','grammar'].forEach((s,i)=>{
+    const p=document.createElement('div');
+    p.className='plot'+(s===res.weak?' weak':'');
+    p.style.left='50%';
+    p.innerHTML=`<i></i><span>${names[s]}</span>`;
+    plots.appendChild(p);
+    requestAnimationFrame(()=>setTimeout(()=>{p.style.left=posPct(res.skills[s].cont)+'%';},120+i*60));
+  });
+
+  document.getElementById('scoreVal').textContent=res.score;
+  document.getElementById('accVal').textContent=res.acc+'%';
+  document.getElementById('timeVal').textContent=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
+
+  const wrap=document.getElementById('skills'); wrap.innerHTML='';
+  ['word','idiom','grammar'].forEach(s=>{
+    const sk=res.skills[s], weak=(s===res.weak);
+    const fill=((sk.cont-1)/4)*100;
+    const el=document.createElement('div');
+    el.className='skill'+(weak?' weak':'');
+    el.innerHTML=`
+      <div class="top">
+        <div class="nm jp">${names[s]}<em>${Math.round(sk.acc*100)}% 正答</em>${weak?'<span class="flag">最優先</span>':''}</div>
+        <div class="lv mono">${fmtLv(sk.level)}<small>${sk.plus?'+':''}</small></div>
+      </div>
+      <div class="meter"><i data-w="${Math.max(3,Math.min(100,fill))}"></i></div>
+      <div class="ticks"><span>A1</span><span>A2</span><span>B1</span><span>B2</span><span>C1</span></div>`;
+    wrap.appendChild(el);
+  });
+  requestAnimationFrame(()=>setTimeout(()=>{
+    document.querySelectorAll('.skill .meter i').forEach(i=>i.style.width=i.dataset.w+'%');
+  },140));
+
+  const wsk=res.skills[res.weak];
+  document.getElementById('findText').innerHTML=
+    `いちばんの伸びしろは <span class="w">${names[res.weak]}（${fmtLv(wsk.level)}）</span>。`+
+    `ここを1段引き上げると、総合CEFRが最も動きます。`;
+  const note=document.getElementById('findNote');
+  note.textContent = res.dkTotal>0
+    ? `「わからない」= ${res.dkTotal}問 · 推測を排した測定です`
+    : `全問回答 · まぐれ要素の少ない結果です`;
+
+  const steps=document.getElementById('steps'); steps.innerHTML='';
+  stepsFor(res).forEach((st,i)=>{
+    const e=document.createElement('div');
+    e.className='step-i';
+    e.innerHTML=`<div class="num mono">${i+1}</div><div class="st jp"><b>${st.t}</b><small>${st.d}</small></div>`;
+    steps.appendChild(e);
+  });
+}
+
+/* ---------- persistence ---------- */
+function saveResult(res,sec){
+  try{
+    const rec={date:Date.now(),band:res.ovBand,plus:res.ovPlus,score:res.score,acc:res.acc,sec};
+    localStorage.setItem('englishlab_last',JSON.stringify(rec));
+    const h=JSON.parse(localStorage.getItem('englishlab_hist')||'[]');
+    h.push(rec); localStorage.setItem('englishlab_hist',JSON.stringify(h.slice(-30)));
+  }catch(e){}
+}
+function showLast(){
+  try{
+    const r=JSON.parse(localStorage.getItem('englishlab_last')||'null');
+    if(!r)return;
+    const el=document.getElementById('lastResult'); el.style.display='block';
+    const d=new Date(r.date);
+    el.innerHTML=`PREV · <b>${r.band}${r.plus?'+':''}</b> · SCORE <b>${r.score}</b> · ${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  }catch(e){}
+}
+
+/* =========================================================
+   SPEAKING PART
+   3タスク(音読/リテル/自由発話) → Groq Whisper文字起こし →
+   Groq LLM(CEFRルーブリック)評価。APIは /api/transcribe,
+   /api/evaluate 経由(Vercelサーバーレス)。未接続時はDEMOにフォールバック。
+   ========================================================= */
+const SPEAK_DATA=[
+ {type:'read', tag:'READ', title:'音読', max:25,
+  instr:'次の英文を、自然な速さで声に出して読んでください。',
+  items:[
+   "Learning a new language takes time, but a little practice every day makes a big difference.",
+   "The train was delayed because of heavy snow, so many passengers had to wait at the station.",
+   "She decided to start her own business after working at the company for almost ten years.",
+  ]},
+ {type:'retell', tag:'RETELL', title:'リテル', prep:15, max:45,
+  instr:'下の英文を覚えて、消えたらあなた自身の言葉で言い直してください。',
+  items:[
+   "A young man moved to a big city to look for a job. At first he felt lonely, but he soon made friends at work and began to enjoy his new life.",
+   "Last weekend, a small town held a food festival. People came from many places to try local dishes, and the event raised money for a new library.",
+   "A woman found an old map in her grandmother's house. She followed it into the forest and discovered a beautiful lake that few people knew about.",
+  ]},
+ {type:'free', tag:'FREE', title:'自由発話', max:50,
+  instr:'次のトピックについて、30〜45秒で自由に話してください。',
+  items:[
+   "Describe a place you would like to visit and explain why.",
+   "Talk about a hobby you enjoy and how you started it.",
+   "What is a skill you want to learn in the future, and why?",
+   "Describe your ideal weekend from morning to night.",
+  ]},
+];
+
+let spTasks=[], spIdx=0, spResults=[], spDemo=false;
+let mediaRecorder=null, audioChunks=[], recStream=null, recStart=0, recTimer=null, recBlob=null, recURL=null;
+
+function startSpeaking(){ spDemo=false; show('speak_intro'); }
+function beginSpeaking(){
+  spTasks=SPEAK_DATA.map(t=>({...t, item:t.items[Math.floor(Math.random()*t.items.length)]}));
+  spIdx=0; spResults=[]; show('speak'); renderTask();
+}
+function quitSpeaking(){ if(confirm('Speaking分析をやめてホームに戻りますか？')){ cleanupRec(); goHome(); } }
+function cleanupRec(){
+  clearInterval(recTimer);
+  if(recStream){ recStream.getTracks().forEach(t=>t.stop()); recStream=null; }
+  if(recURL){ URL.revokeObjectURL(recURL); recURL=null; }
+}
+
+function renderTask(){
+  const t=spTasks[spIdx];
+  document.getElementById('spProg').style.width=`${(spIdx/spTasks.length)*100}%`;
+  document.getElementById('spN').textContent=`TASK ${spIdx+1} / ${spTasks.length}`;
+  document.getElementById('spTag').textContent=t.tag;
+  const body=document.getElementById('spBody');
+  let contentHTML='';
+  if(t.type==='read') contentHTML=`<div class="read">${t.item}</div>`;
+  else if(t.type==='retell') contentHTML=`<div class="passage" id="spPassage">${t.item}</div>`;
+  else contentHTML=`<div class="topic">${t.item}</div>`;
+
+  body.innerHTML=`
+    <div class="sp-instr jp">${t.instr}</div>
+    <div class="sp-content">${contentHTML}</div>
+    ${t.type==='retell'?'<div class="sp-prep jp" id="spPrep"></div>':''}
+    <div class="sp-recwrap" id="spRecWrap">
+      <button class="sp-recbtn" id="spRecBtn" aria-label="録音">🎙</button>
+      <div class="sp-recstate jp" id="spRecState">タップして録音（最大${t.max}秒）</div>
+    </div>
+    <div id="spAfter"></div>`;
+
+  const btn=document.getElementById('spRecBtn');
+  if(t.type==='retell'){
+    // 準備時間: passage表示 → カウントダウン → 隠して録音可能に
+    btn.disabled=true;
+    let left=t.prep;
+    const prepEl=document.getElementById('spPrep');
+    prepEl.innerHTML=`覚える時間: <b>${left}</b> 秒`;
+    document.getElementById('spRecState').textContent='まず英文を覚えてください';
+    const cd=setInterval(()=>{
+      left--;
+      if(left<=0){
+        clearInterval(cd);
+        const p=document.getElementById('spPassage');
+        if(p){ p.parentElement.innerHTML='<div class="hidden-msg jp">覚えた内容を、自分の言葉で話してください</div>'; }
+        prepEl.textContent='';
+        btn.disabled=false;
+        btn.onclick=toggleRec;
+        document.getElementById('spRecState').textContent=`タップして録音（最大${t.max}秒）`;
+      }else{ prepEl.innerHTML=`覚える時間: <b>${left}</b> 秒`; }
+    },1000);
+  }else{
+    btn.onclick=toggleRec;
+  }
+}
+
+let recording=false;
+async function toggleRec(){
+  if(recording){ stopRec(); return; }
+  const t=spTasks[spIdx];
+  try{
+    recStream=await navigator.mediaDevices.getUserMedia({audio:true});
+  }catch(e){
+    // マイク不可(プレビュー等) → DEMOで続行できるよう案内
+    const wrap=document.getElementById('spRecWrap');
+    wrap.innerHTML=`<div class="sp-recstate jp" style="color:var(--coral)">マイクを使用できませんでした</div>
+      <button class="btn ghost jp" style="max-width:220px" onclick="demoSkip()">録音なしでデモ体験する</button>`;
+    return;
+  }
+  audioChunks=[];
+  let mime='audio/webm';
+  try{ mediaRecorder=new MediaRecorder(recStream,{mimeType:'audio/webm'}); }
+  catch(e){ mediaRecorder=new MediaRecorder(recStream); mime=mediaRecorder.mimeType||'audio/webm'; }
+  mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) audioChunks.push(e.data); };
+  mediaRecorder.onstop=onRecStop;
+  mediaRecorder.start();
+  recording=true; recStart=Date.now();
+  const btn=document.getElementById('spRecBtn'); btn.classList.add('rec'); btn.textContent='■';
+  const state=document.getElementById('spRecState');
+  clearInterval(recTimer);
+  recTimer=setInterval(()=>{
+    const s=(Date.now()-recStart)/1000;
+    state.innerHTML=`<span class="sp-rectime">${Math.floor(s)}s</span> · タップで停止`;
+    document.getElementById('spClock').textContent=`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+    if(s>=t.max) stopRec();
+  },200);
+}
+function stopRec(){
+  if(!recording) return;
+  recording=false; clearInterval(recTimer);
+  try{ mediaRecorder.stop(); }catch(e){}
+  if(recStream){ recStream.getTracks().forEach(t=>t.stop()); }
+}
+function onRecStop(){
+  const dur=(Date.now()-recStart)/1000;
+  recBlob=new Blob(audioChunks,{type:mediaRecorder.mimeType||'audio/webm'});
+  if(recURL) URL.revokeObjectURL(recURL);
+  recURL=URL.createObjectURL(recBlob);
+  const btn=document.getElementById('spRecBtn'); btn.classList.remove('rec'); btn.textContent='🎙'; btn.disabled=true;
+  document.getElementById('spRecState').textContent='録音完了';
+  transcribeRec(recBlob,dur);
+}
+
+function demoSkip(){
+  spDemo=true;
+  const t=spTasks[spIdx];
+  const text=demoTranscript(t);
+  storeResult(t,text,t.type==='free'?40:t.type==='retell'?32:12);
+  showTranscript(text,true);
+}
+
+async function transcribeRec(blob,dur){
+  const after=document.getElementById('spAfter');
+  after.innerHTML=`<div class="sp-playback"><audio controls src="${recURL}"></audio>
+    <div class="sp-tx-loading"><span class="spinner"></span>文字起こし中…</div></div>`;
+  const t=spTasks[spIdx];
+  let text='';
+  try{
+    const b64=await blobToB64(blob);
+    const r=await fetch('/api/transcribe',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({audio:b64, mime:blob.type})});
+    if(!r.ok) throw 0;
+    const j=await r.json(); text=(j.text||'').trim();
+    if(!text) text='(認識できませんでした)';
+  }catch(e){ spDemo=true; text=demoTranscript(t); }
+  storeResult(t,text,Math.round(dur));
+  showTranscript(text,false);
+}
+function storeResult(t,text,dur){
+  const wc=countWords(text);
+  const res={type:t.type, transcript:text, durationSec:dur, wordCount:wc};
+  if(t.type==='read'){ res.target=t.item; res.accuracy=readAccuracy(t.item,text); }
+  if(t.type==='retell') res.source=t.item;
+  if(t.type==='free') res.prompt=t.item;
+  spResults[spIdx]=res;
+}
+function showTranscript(text,demo){
+  const after=document.getElementById('spAfter');
+  const last=spIdx===spTasks.length-1;
+  after.innerHTML=`<div class="sp-playback">
+      ${recURL&&!demo?`<audio controls src="${recURL}"></audio>`:''}
+      <div class="sp-tx"><span class="lbl">TRANSCRIPT</span>${text}</div>
+    </div>
+    <div class="sp-btns">
+      <button class="btn ghost jp" onclick="retryTask()">録り直す</button>
+      <button class="btn primary jp" onclick="nextTask()">${last?'分析する':'次のタスク ›'}</button>
+    </div>`;
+}
+function retryTask(){ cleanupRec(); recording=false; renderTask(); }
+function nextTask(){
+  cleanupRec();
+  if(spIdx<spTasks.length-1){ spIdx++; recording=false; renderTask(); }
+  else runEvaluation();
+}
+
+/* ---------- 評価 ---------- */
+async function runEvaluation(){
+  document.getElementById('spProg').style.width='100%';
+  document.getElementById('spBody').innerHTML=
+    `<div class="sp-processing"><span class="spinner"></span><p class="jp">音声を分析しています…<br>CEFRルーブリックで評価中</p></div>`;
+  let data=null;
+  try{
+    const r=await fetch('/api/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({tasks:spResults})});
+    if(!r.ok) throw 0;
+    data=await r.json();
+    if(data.error||!data.dimensions) throw 0;
+  }catch(e){ spDemo=true; data=demoEvaluation(); }
+  renderSpeakReport(data);
+}
+
+function renderSpeakReport(d){
+  document.getElementById('spDate').textContent=new Date().toISOString().slice(0,10).replace(/-/g,'.');
+  document.getElementById('spCefr').textContent=d.overallCEFR||'—';
+  document.getElementById('spName').textContent=CEFR_NAME[d.overallCEFR]||'';
+  document.getElementById('spSummary').textContent=d.summary||'';
+  document.getElementById('spDemoBadge').style.display=spDemo?'block':'none';
+
+  // metrics
+  const totWords=spResults.reduce((a,r)=>a+(r.wordCount||0),0);
+  const totDur=spResults.reduce((a,r)=>a+(r.durationSec||0),0);
+  const wpm=totDur?Math.round(totWords/totDur*60):0;
+  document.getElementById('spScore').textContent=d.overallScore??'—';
+  document.getElementById('spWpm').textContent=wpm;
+  document.getElementById('spWords').textContent=totWords;
+
+  // dimensions
+  const dimBox=document.getElementById('spDims'); dimBox.innerHTML='';
+  const DIMS=['発音','流暢さ','文法','語彙','一貫性'];
+  DIMS.forEach(name=>{
+    const dm=(d.dimensions&&d.dimensions[name])||{cefr:'—',score:0,note:''};
+    const el=document.createElement('div');
+    el.className='skill';
+    el.innerHTML=`
+      <div class="top">
+        <div class="nm jp">${name}<em>${dm.note||''}</em></div>
+        <div class="lv mono">${dm.cefr||'—'}</div>
+      </div>
+      <div class="meter"><i data-w="${Math.max(3,Math.min(100,dm.score||0))}"></i></div>`;
+    dimBox.appendChild(el);
+  });
+  requestAnimationFrame(()=>setTimeout(()=>{
+    document.querySelectorAll('#spDims .meter i').forEach(i=>i.style.width=i.dataset.w+'%');
+  },140));
+
+  // findings
+  const S=document.getElementById('spStrengths'); S.innerHTML='';
+  (d.strengths||[]).forEach(x=>{const e=document.createElement('div');e.className='fitem jp';e.textContent=x;S.appendChild(e);});
+  const I=document.getElementById('spImprove'); I.innerHTML='';
+  (d.improvements||[]).forEach(x=>{const e=document.createElement('div');e.className='fitem jp';e.textContent=x;I.appendChild(e);});
+
+  // transcripts
+  const T=document.getElementById('spTranscripts'); T.innerHTML='';
+  const labelJa={read:'音読',retell:'リテル',free:'自由発話'};
+  spResults.forEach((r,i)=>{
+    const wpmI=r.durationSec?Math.round(r.wordCount/r.durationSec*60):0;
+    const acc=(r.type==='read'&&typeof r.accuracy==='number')?` · 正確度 ${(r.accuracy*100).toFixed(0)}%`:'';
+    const el=document.createElement('div'); el.className='sp-tr';
+    el.innerHTML=`<div class="th"><span class="rtag">TASK ${i+1} · ${labelJa[r.type]}</span>
+      <span class="m">${r.wordCount}語 · ${r.durationSec}s · ${wpmI}wpm${acc}</span></div>
+      <div class="tt">${r.transcript||'—'}</div>`;
+    T.appendChild(el);
+  });
+
+  show('speak_report'); window.scrollTo(0,0);
+}
+
+/* ---------- helpers ---------- */
+function blobToB64(blob){ return new Promise((res,rej)=>{const r=new FileReader();
+  r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(blob);}); }
+function countWords(s){ return (s||'').trim().split(/\s+/).filter(Boolean).length; }
+function normW(s){ return (s||'').toLowerCase().replace(/[^a-z0-9'\s]/g,' ').split(/\s+/).filter(Boolean); }
+function readAccuracy(target,got){
+  const tw=normW(target), gset=new Set(normW(got));
+  if(!tw.length) return 0;
+  let hit=0; tw.forEach(w=>{ if(gset.has(w)) hit++; });
+  return hit/tw.length;
+}
+
+/* ---------- DEMO フォールバック ---------- */
+function demoTranscript(t){
+  if(t.type==='read') return t.item; // 音読は原文どおり読めた想定
+  if(t.type==='retell') return "A young man moved to a big city to find work. He was lonely at first but made friends and started to like his new life.";
+  return "I really enjoy hiking on weekends. I started it a few years ago when a friend invited me, and now I try to go to the mountains at least once a month because it helps me relax.";
+}
+function demoEvaluation(){
+  const totWords=spResults.reduce((a,r)=>a+(r.wordCount||0),0);
+  const wpm=(()=>{const d=spResults.reduce((a,r)=>a+(r.durationSec||0),0);return d?totWords/d*60:70;})();
+  const band=wpm>=110?'B2':wpm>=85?'B1':wpm>=60?'A2':'A2';
+  const sc=band==='B2'?78:band==='B1'?64:48;
+  const mk=(c,s,n)=>({cefr:c,score:s,note:n});
+  return {
+    overallCEFR:band, overallScore:Math.round(sc*10),
+    dimensions:{
+      発音:mk(band,sc+4,'音読はおおむね明瞭。母音の長短に注意。'),
+      流暢さ:mk(band,sc,'大きな詰まりは少ないが、言い直しがやや目立つ。'),
+      文法:mk(band,sc-4,'基本文は正確。複文や時制の一致で改善余地。'),
+      語彙:mk(band,sc,'日常語は十分。抽象的な言い換えを増やすと良い。'),
+      一貫性:mk(band,sc+2,'話の筋は追える。接続表現で流れを強化できる。'),
+    },
+    strengths:['伝えたい内容が最後まで途切れず話せている','基本的な文構造は安定している'],
+    improvements:['接続詞(because, so, although)で文をつないで論理を明確に','be動詞と一般動詞の混同に注意し、時制をそろえる'],
+    summary:'全体として中級レベル。伝達は成立しており、文の接続と語彙の幅を広げると一段上へ。',
+  };
+}
+
+/* ---------- nav ---------- */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active'); window.scrollTo(0,0);
+}
+function goHome(){ clearInterval(timerId); show('home'); showLast(); }
+showLast();
+</script>
+</body>
+</html>
