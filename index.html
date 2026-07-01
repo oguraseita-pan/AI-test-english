@@ -324,42 +324,44 @@ body{
 
 <script>
 /* =========================================================
-   CEFR MAPPING — 確定版（暫定運用）
-   単語: Sproutカテゴリ → CEFR帯。TOEFLはiBT帯で細分。
+   CEFR TAGGING — per-word 方式（正）／出典
    ---------------------------------------------------------
-   帯別プール実測（実データ規模）:
-     A2:1711  B1:1462  B2:1260  C1:423   計4856
-   → 各帯からの抽出に十分。将来、受験の正答データで補正。
+   単語の難易度は「カテゴリ」ではなく、検証済み語彙リストの
+   付与レベルを1語ずつ使う:
+     A1〜B2 : CEFR-J Wordlist v1.6（東京外大 投野研究室）
+     C1/C2  : Octanove Vocabulary Profile C1/C2
+   両者は headword/pos/CEFR の同一スキーマ。統合すると
+   A1〜C2 で 8,204語（A1:1002 A2:1165 B1:2026 B2:2280
+   C1:890 C2:841）。本アプリの単語プールはこの収録語から選定。
+   ---------------------------------------------------------
+   tagWord: item.cefr（リスト由来）を最優先。無い時のみ保険。
    ========================================================= */
-const WORD_CEFR_MAP = {
-  '日常生活':'A2',
-  '英検'    :'A2',
-  'TOEIC'   :'B1',
-  'ビジネス':'B2',
-  'TOEFL'   : { 'iBT40':'B1', 'iBT60':'B2', 'iBT80':'B2', 'iBT100':'C1' },
-};
+const TOEFL_IBT_TO_CEFR = { 'iBT40':'B1','iBT60':'B2','iBT80':'B2','iBT100':'C1' };
 function tagWord(item){
-  const m = WORD_CEFR_MAP[item.category];
-  if(typeof m === 'string') return m;
-  if(item.category === 'TOEFL') return (WORD_CEFR_MAP.TOEFL[item.toeflBand] || 'B2');
-  return 'B1'; // 未知カテゴリの保険
+  if(item.cefr) return item.cefr;                       // CEFR-J結合済みが正規ルート
+  if(item.category==='TOEFL' && item.toeflBand)         // iBT帯は難易度信号
+    return TOEFL_IBT_TO_CEFR[item.toeflBand] || 'B2';
+  console.warn('CEFR未付与の語(要タグ付け):', item.head); // カテゴリ推定はしない
+  return 'B1';
 }
-// 熟語: 既存の IDIOM_CEFR タグ(A2/B1/B2/C1)をそのまま使用（タグ付け不要）
+// 熟語: Sprout の IDIOM_CEFR(A2/B1/B2/C1) を使用。無ければ要タグ付け。
 function tagIdiom(item){ return item.cefr || 'B1'; }
 
 /* ---------------------------------------------------------
    DATA INGESTION（Sprout差し込み口）
    Sproutからエクスポートした配列を ingest() に渡すと、
-   自動でCEFRタグ付け → 帯別プール化され、そのまま出題されます。
+   帯別プール化され、そのまま出題されます。
 
-   期待フォーマット:
-   words = [{ head:'improve', ja:'改善する', category:'TOEIC',
-              toeflBand:null, distractors:['悪化する','維持する','中止する'] }, ...]
-   idioms= [{ head:'give up', ja:'あきらめる', cefr:'B1',
+   ★単語には CEFR-J結合済みの cefr を必須で持たせる:
+   words = [{ head:'improve', pos:'v', cefr:'A2', ja:'改善する',
+              distractors:['悪化する','維持する','中止する'] }, ...]
+     （cefr は CEFR-J Wordlist を head+pos で結合して付与した値。
+      C1等でCEFR-J未収録の語は EVP / iBT帯 / 頻度で補完しておく）
+   idioms= [{ head:'give up', cefr:'B1', ja:'あきらめる',
               distractors:['始める','続ける','手伝う'] }, ...]
-   grammar=[{ sent:'She ___ to school.', cefr:'A2',
-              answer:'goes', distractors:['go','going','gone'] }, ...]
-   （grammar は Sprout の IDIOM_FILL 等から体感難易度でA2〜C1を付与）
+   grammar=[{ sent:'She ___ to school.', cefr:'A2', answer:'goes',
+              distractors:['go','going','gone'] }, ...]
+     （grammar の cefr は CEFR-J Grammar Profile で付与）
 --------------------------------------------------------- */
 let POOL = { word:[], idiom:[], grammar:[] };
 function normalize(list, kind){
@@ -383,27 +385,75 @@ function ingest(words, idioms, grammar){
    SEED DATA — 動作確認用（Sprout差し込みまでの内蔵問題）
    すでにタグ付け済みの形式で保持。ingest()で置換可能。
    ========================================================= */
+/* 単語プール: CEFR-J Wordlist(A1-B2) + Octanove Vocabulary Profile(C1/C2)
+   の収録語から選定。cefr は各リストの付与値。correct は c[0]（実行時に
+   shuffleChoices でシャッフルされるので配置は不問）。各帯12語=計60語。 */
 const SEED_WORD=[
- {sec:'word',cefr:'A2',head:'borrow',a:1,c:['貸す','借りる','買う','届ける']},
- {sec:'word',cefr:'A2',head:'quiet',a:0,c:['静かな','騒がしい','明るい','危険な']},
- {sec:'word',cefr:'A2',head:'arrive',a:0,c:['到着する','出発する','引き返す','待つ']},
- {sec:'word',cefr:'A2',head:'cheap',a:0,c:['安い','高い','重い','新しい']},
- {sec:'word',cefr:'A2',head:'remember',a:1,c:['忘れる','覚えている','急ぐ','疑う']},
- {sec:'word',cefr:'B1',head:'improve',a:0,c:['改善する','悪化する','維持する','中止する']},
- {sec:'word',cefr:'B1',head:'avoid',a:0,c:['避ける','求める','含む','許す']},
- {sec:'word',cefr:'B1',head:'familiar',a:0,c:['よく知っている','珍しい','複雑な','危険な']},
- {sec:'word',cefr:'B1',head:'suggest',a:0,c:['提案する','断る','命令する','証明する']},
- {sec:'word',cefr:'B1',head:'reduce',a:1,c:['増やす','減らす','隠す','数える']},
- {sec:'word',cefr:'B2',head:'reluctant',a:1,c:['熱心な','気が進まない','満足した','自信のある']},
- {sec:'word',cefr:'B2',head:'enhance',a:0,c:['高める','減らす','隠す','壊す']},
- {sec:'word',cefr:'B2',head:'inevitable',a:0,c:['避けられない','望ましい','一時的な','意図的な']},
- {sec:'word',cefr:'B2',head:'thorough',a:0,c:['徹底的な','大まかな','怠慢な','曖昧な']},
- {sec:'word',cefr:'B2',head:'deteriorate',a:0,c:['悪化する','回復する','安定する','拡大する']},
- {sec:'word',cefr:'C1',head:'ubiquitous',a:0,c:['どこにでもある','ごく稀な','目に見えない','一時的な']},
- {sec:'word',cefr:'C1',head:'meticulous',a:0,c:['細心の','大ざっぱな','怠惰な','寛大な']},
- {sec:'word',cefr:'C1',head:'tenuous',a:1,c:['強固な','希薄で根拠の薄い','明確な','急速な']},
- {sec:'word',cefr:'C1',head:'candid',a:0,c:['率直な','遠回しな','臆病な','形式的な']},
- {sec:'word',cefr:'C1',head:'austere',a:1,c:['華美な','質素で厳格な','寛大な','曖昧な']},
+ // ---- A1 ----
+ {sec:'word',cefr:'A1',head:'city',a:0,c:['都市','田舎','島','山']},
+ {sec:'word',cefr:'A1',head:'corner',a:0,c:['角・隅','中央','屋根','入口']},
+ {sec:'word',cefr:'A1',head:'forget',a:0,c:['忘れる','覚える','借りる','数える']},
+ {sec:'word',cefr:'A1',head:'fruit',a:0,c:['果物','野菜','穀物','肉']},
+ {sec:'word',cefr:'A1',head:'funny',a:0,c:['おかしい・面白い','悲しい','退屈な','難しい']},
+ {sec:'word',cefr:'A1',head:'hour',a:0,c:['1時間','1分','1日','1週間']},
+ {sec:'word',cefr:'A1',head:'jacket',a:0,c:['上着','靴','帽子','手袋']},
+ {sec:'word',cefr:'A1',head:'repeat',a:0,c:['繰り返す','始める','止める','忘れる']},
+ {sec:'word',cefr:'A1',head:'sing',a:0,c:['歌う','踊る','描く','走る']},
+ {sec:'word',cefr:'A1',head:'strong',a:0,c:['強い','弱い','遅い','軽い']},
+ {sec:'word',cefr:'A1',head:'teach',a:0,c:['教える','学ぶ','尋ねる','答える']},
+ {sec:'word',cefr:'A1',head:'tree',a:0,c:['木','花','草','石']},
+ // ---- A2 ----
+ {sec:'word',cefr:'A2',head:'audience',a:0,c:['観客・聴衆','選手','審判','監督']},
+ {sec:'word',cefr:'A2',head:'bargain',a:0,c:['お買い得品','高価な品','贈り物','借金']},
+ {sec:'word',cefr:'A2',head:'comfortable',a:0,c:['快適な','不便な','危険な','高価な']},
+ {sec:'word',cefr:'A2',head:'countryside',a:0,c:['田舎','都会','海岸','砂漠']},
+ {sec:'word',cefr:'A2',head:'furniture',a:0,c:['家具','衣類','食器','工具']},
+ {sec:'word',cefr:'A2',head:'graduate',a:0,c:['卒業する','入学する','退学する','進学する']},
+ {sec:'word',cefr:'A2',head:'purpose',a:0,c:['目的','結果','偶然','手段']},
+ {sec:'word',cefr:'A2',head:'success',a:0,c:['成功','失敗','挑戦','努力']},
+ {sec:'word',cefr:'A2',head:'wedding',a:0,c:['結婚式','葬式','誕生日','卒業式']},
+ {sec:'word',cefr:'A2',head:'worried',a:0,c:['心配して','安心して','満足して','退屈して']},
+ {sec:'word',cefr:'A2',head:'planet',a:0,c:['惑星','恒星','衛星','彗星']},
+ {sec:'word',cefr:'A2',head:'common',a:0,c:['よくある・共通の','珍しい','特別な','個人的な']},
+ // ---- B1 ----
+ {sec:'word',cefr:'B1',head:'afford',a:0,c:['（金銭的に）～する余裕がある','～を禁じる','～を借りる','～を避ける']},
+ {sec:'word',cefr:'B1',head:'arrange',a:0,c:['手配する・整える','中止する','忘れる','壊す']},
+ {sec:'word',cefr:'B1',head:'confirm',a:0,c:['確認する','否定する','疑う','隠す']},
+ {sec:'word',cefr:'B1',head:'cure',a:0,c:['治す','悪化させる','診断する','予防する']},
+ {sec:'word',cefr:'B1',head:'destination',a:0,c:['目的地','出発地','経路','距離']},
+ {sec:'word',cefr:'B1',head:'individual',a:0,c:['個人','集団','組織','社会']},
+ {sec:'word',cefr:'B1',head:'persuade',a:0,c:['説得する','命令する','拒否する','無視する']},
+ {sec:'word',cefr:'B1',head:'region',a:0,c:['地域','期間','数量','方法']},
+ {sec:'word',cefr:'B1',head:'reject',a:0,c:['拒否する','受け入れる','提案する','承認する']},
+ {sec:'word',cefr:'B1',head:'rely',a:0,c:['頼る','疑う','争う','断る']},
+ {sec:'word',cefr:'B1',head:'suppose',a:0,c:['～だと思う・推測する','証明する','断言する','否定する']},
+ {sec:'word',cefr:'B1',head:'vast',a:0,c:['広大な','狭い','空の','短い']},
+ // ---- B2 ----
+ {sec:'word',cefr:'B2',head:'blossom',a:0,c:['（花が）咲く','枯れる','種をまく','収穫する']},
+ {sec:'word',cefr:'B2',head:'contaminate',a:0,c:['汚染する','浄化する','消毒する','保存する']},
+ {sec:'word',cefr:'B2',head:'convert',a:0,c:['変換する','維持する','破壊する','複製する']},
+ {sec:'word',cefr:'B2',head:'courtesy',a:0,c:['礼儀正しさ','無礼','冷淡','傲慢']},
+ {sec:'word',cefr:'B2',head:'donate',a:0,c:['寄付する','借りる','販売する','徴収する']},
+ {sec:'word',cefr:'B2',head:'enforce',a:0,c:['（法を）施行する・強制する','廃止する','違反する','免除する']},
+ {sec:'word',cefr:'B2',head:'grasp',a:0,c:['把握する・つかむ','手放す','見失う','忘れる']},
+ {sec:'word',cefr:'B2',head:'outcome',a:0,c:['結果','原因','過程','目的']},
+ {sec:'word',cefr:'B2',head:'procedure',a:0,c:['手順','結果','目的','例外']},
+ {sec:'word',cefr:'B2',head:'refrain',a:0,c:['控える','続ける','促す','強いる']},
+ {sec:'word',cefr:'B2',head:'retreat',a:0,c:['退却する','前進する','攻撃する','占領する']},
+ {sec:'word',cefr:'B2',head:'superb',a:0,c:['見事な','平凡な','ひどい','粗末な']},
+ // ---- C1 ----
+ {sec:'word',cefr:'C1',head:'apprentice',a:0,c:['見習い','熟練者','監督者','顧客']},
+ {sec:'word',cefr:'C1',head:'comply',a:0,c:['（規則に）従う','違反する','反抗する','無視する']},
+ {sec:'word',cefr:'C1',head:'confide',a:0,c:['打ち明ける','隠す','疑う','否定する']},
+ {sec:'word',cefr:'C1',head:'constraint',a:0,c:['制約','自由','許可','拡大']},
+ {sec:'word',cefr:'C1',head:'daunting',a:0,c:['ひるませる・手ごわい','容易な','楽しい','退屈な']},
+ {sec:'word',cefr:'C1',head:'detest',a:0,c:['ひどく嫌う','熱望する','称賛する','許す']},
+ {sec:'word',cefr:'C1',head:'hostile',a:0,c:['敵対的な','友好的な','中立の','無関心な']},
+ {sec:'word',cefr:'C1',head:'impediment',a:0,c:['障害','促進','利点','手段']},
+ {sec:'word',cefr:'C1',head:'inherent',a:0,c:['本来備わっている','後天的な','一時的な','偶発的な']},
+ {sec:'word',cefr:'C1',head:'relinquish',a:0,c:['放棄する','獲得する','維持する','主張する']},
+ {sec:'word',cefr:'C1',head:'resilient',a:0,c:['回復力のある','もろい','頑固な','消極的な']},
+ {sec:'word',cefr:'C1',head:'sacrifice',a:0,c:['犠牲にする','保護する','獲得する','節約する']},
 ];
 const SEED_IDIOM=[
  {sec:'idiom',cefr:'A2',head:'look for ~',a:0,c:['~を探す','~を見つける','~を見る','~を失う']},
@@ -444,22 +494,28 @@ POOL={word:SEED_WORD.slice(),idiom:SEED_IDIOM.slice(),grammar:SEED_GRAMMAR.slice
 /* =========================================================
    CEFR constants
    ========================================================= */
-const BAND_ORDER=['A2','B1','B2','C1'];
-const BAND_NUM={A1:1,A2:2,B1:3,B2:4,C1:5};
-const NUM_BAND={1:'A1',2:'A2',3:'B1',4:'B2',5:'C1'};
-const WEIGHT={A2:1,B1:2,B2:3,C1:4};
-const CEFR_NAME={A1:'入門レベル',A2:'初級レベル',B1:'中級レベル',B2:'中上級レベル',C1:'上級レベル'};
+const BAND_ORDER=['A1','A2','B1','B2','C1'];
+const BAND_NUM={'Pre-A1':0,A1:1,A2:2,B1:3,B2:4,C1:5};
+const NUM_BAND={0:'Pre-A1',1:'A1',2:'A2',3:'B1',4:'B2',5:'C1'};
+const WEIGHT={A1:1,A2:2,B1:3,B2:4,C1:5};
+const CEFR_NAME={'Pre-A1':'入門前',A1:'入門レベル',A2:'初級レベル',B1:'中級レベル',B2:'中上級レベル',C1:'上級レベル'};
 const CEFR_SUB={
+ 'Pre-A1':'ごく基礎から。まずは頻出語から。',
  A1:'基礎の入口。定型表現が中心。',A2:'日常の基本を扱える。',
  B1:'自立して使える中級者。',B2:'実用レベルで幅広く対応。',C1:'熟達に近い運用力。'
 };
-// 出題設計: 各帯の抽出数
-const PLAN={word:{A2:5,B1:5,B2:5,C1:5}, idiom:{A2:3,B1:3,B2:2,C1:2}, grammar:{A2:5,B1:5,B2:5,C1:5}};
+// 出題設計: 各帯の抽出数（単語はA1〜C1の5帯／熟語・文法はA2〜C1）
+const PLAN={word:{A1:4,A2:4,B1:4,B2:4,C1:4}, idiom:{A2:3,B1:3,B2:2,C1:2}, grammar:{A2:5,B1:5,B2:5,C1:5}};
 
 function shuffle(a){a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a}
+function shuffleChoices(q){ // 選択肢の並びをランダム化し正解indexを追従
+  const order=shuffle(q.c.map((t,i)=>({t,i})));
+  return {...q, c:order.map(o=>o.t), a:order.findIndex(o=>o.i===q.a)};
+}
 function pickPerBand(pool,plan){
   const out=[];
   for(const band of BAND_ORDER){
+    if(!plan[band]) continue;
     const inBand=shuffle(pool.filter(q=>q.cefr===band));
     out.push(...inBand.slice(0,plan[band]));
   }
@@ -478,7 +534,7 @@ function buildQuiz(){
     ...pickPerBand(POOL.word,   PLAN.word),
     ...pickPerBand(POOL.idiom,  PLAN.idiom),
     ...pickPerBand(POOL.grammar,PLAN.grammar),
-  ];
+  ].map(shuffleChoices);
 }
 function startTest(){
   quiz=buildQuiz(); idx=0; answers=[];
@@ -531,19 +587,24 @@ function estimateSkill(rows){
   const bb={}; BAND_ORDER.forEach(b=>bb[b]={n:0,ok:0});
   rows.forEach(r=>{bb[r.cefr].n++; if(r.correct)bb[r.cefr].ok++;});
   const acc=b=>bb[b].n? bb[b].ok/bb[b].n : null;
-  let level='A1', num=1;
-  const a2=acc('A2');
-  if(a2!==null){
-    if(a2>=0.6){ level='A2'; num=2;
-      for(let k=1;k<BAND_ORDER.length;k++){const b=BAND_ORDER[k],v=acc(b);
-        if(v!==null && v>=0.6){level=b;num=BAND_NUM[b];} else break;}
-    } else if(a2>=0.4){ level='A2-'; num=1.6; }
-  }
-  let plus=false, cont=num;
-  const ni=BAND_ORDER.indexOf(NUM_BAND[Math.round(num)]);
-  if(ni>=0 && ni<BAND_ORDER.length-1){
-    const nb=BAND_ORDER[ni+1], nv=acc(nb);
-    if(nv!==null){ cont=num+Math.max(0,Math.min(1,nv))*0.9; if(nv>=0.4&&nv<0.6)plus=true; }
+  const present=BAND_ORDER.filter(b=>bb[b].n>0);   // 出題された帯だけ（区間可変対応）
+  // 下から連続で0.6以上 合格した最高帯を到達レベルに
+  let passedTo=null;
+  for(const b of present){ if(acc(b)>=0.6) passedTo=b; else break; }
+  let level, num, plus=false, cont;
+  if(passedTo===null){
+    const low=present[0], la=acc(low);
+    if(la>=0.4){ level=low+'-'; num=BAND_NUM[low]-0.4; }          // 最下帯の手前
+    else { num=BAND_NUM[low]-1; level=(num<1?'Pre-A1':NUM_BAND[num]); } // さらに下
+    cont=Math.max(0.5,num);
+  }else{
+    level=passedTo; num=BAND_NUM[passedTo]; cont=num;
+    const i=present.indexOf(passedTo);
+    if(i<present.length-1){                                       // 次帯の手応えで連続値を補正
+      const nv=acc(present[i+1]);
+      cont=num+Math.max(0,Math.min(1,nv))*0.9;
+      if(nv>=0.4 && nv<0.6) plus=true;
+    }
   }
   const ok=rows.filter(r=>r.correct).length;
   const dk=rows.filter(r=>r.dk).length;
@@ -553,9 +614,9 @@ function grade(){
   const secs=['word','idiom','grammar'], skills={};
   secs.forEach(s=>skills[s]=estimateSkill(answers.filter(a=>a.sec===s)));
   const contAvg=(skills.word.cont+skills.idiom.cont+skills.grammar.cont)/3;
-  const ovNum=Math.max(1,Math.min(5,Math.round(contAvg)));
-  const ovBand=NUM_BAND[ovNum];
-  const ovPlus=(contAvg-ovNum)>=0.4 && ovNum<5;
+  const ovNum=Math.max(0,Math.min(5,Math.round(contAvg)));
+  const ovBand=contAvg<1? 'Pre-A1' : NUM_BAND[Math.max(1,ovNum)];
+  const ovPlus=(contAvg-Math.round(contAvg))>=0.4 && contAvg<5;
   let earn=0,tot=0; answers.forEach(a=>{const w=WEIGHT[a.cefr];tot+=w;if(a.correct)earn+=w;});
   const score=Math.round(earn/tot*1000);
   const acc=Math.round(answers.filter(a=>a.correct).length/answers.length*100);
@@ -568,7 +629,7 @@ function grade(){
 const SEC_JA={word:'語彙',idiom:'熟語',grammar:'文法'};
 function stepsFor(res){
   const order=['word','idiom','grammar'].sort((a,b)=>res.skills[a].cont-res.skills[b].cont);
-  const lv=s=>res.skills[s].level.replace('-','');
+  const lv=s=>{const L=res.skills[s].level; return L==='Pre-A1'?'A1':L.replace('-','');};
   const make=s=>{
     if(s==='word')   return {t:`語彙トレーニング（${lv(s)}帯）`, d:'フラッシュカードと4択で反復。弱い帯を集中的に。'};
     if(s==='idiom')  return {t:`熟語・語法の演習（${lv(s)}）`, d:'前置詞／助詞の穴埋め（Part 5形式）で語法を固める。'};
@@ -590,7 +651,7 @@ function finish(){
   saveResult(res,elapsed);
   show('result'); window.scrollTo(0,0);
 }
-const fmtLv=lv=>lv==='A2-'?'A2手前':lv;
+const fmtLv=lv=> lv==='Pre-A1' ? 'Pre-A1' : (lv&&lv.endsWith('-') ? lv.slice(0,-1)+'手前' : lv);
 const posPct=cont=>Math.max(3,Math.min(97,((cont-1)/4)*100)); // 1..5 → 0..100
 
 function renderResult(res,elapsed){
