@@ -7,6 +7,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>English Lab — 英語力分析</title>
+<meta name="description" content="English Lab — 語彙・熟語・文法とスピーキングをCEFRで精密測定。最短7分で、レベル・スコア・弱点・推奨ステップを1枚のレポートに。">
+<meta property="og:title" content="English Lab — 英語力分析">
+<meta property="og:description" content="CEFR準拠の英語力測定。Reading 50問＋Speaking 3タスクで、あなたのレベルと弱点を可視化。">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='6' width='52' height='52' rx='12' fill='none' stroke='%231a1c22' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23f0503c'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -306,6 +311,21 @@ body{
 .sp-tr .th .rtag{font-family:"IBM Plex Mono";font-size:.6rem;font-weight:600;letter-spacing:.06em;padding:2px 7px;border-radius:4px;background:var(--paper-2);color:var(--ink-2)}
 .sp-tr .th .m{margin-left:auto;font-family:"IBM Plex Mono";font-size:.66rem;color:var(--ink-3)}
 .sp-tr .tt{font-size:.84rem;color:var(--ink-2);line-height:1.55}
+
+/* unanswered hint */
+.unans{margin-top:10px;width:100%;font:inherit;font-size:.78rem;color:var(--amber);background:color-mix(in srgb,var(--amber) 9%,transparent);
+  border:1px dashed color-mix(in srgb,var(--amber) 45%,transparent);border-radius:10px;padding:10px;cursor:pointer}
+
+/* history */
+.hist-list{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+.hist-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px;box-shadow:var(--shadow)}
+.hist-row .hd{font-size:.68rem;color:var(--ink-3);flex:none}
+.hist-row .hk{font-size:.58rem;font-weight:600;letter-spacing:.08em;color:var(--ink-2);background:var(--paper-2);border-radius:4px;padding:2px 6px;flex:none}
+.hist-row .hb{font-weight:700;font-size:1rem;color:var(--indigo);min-width:38px;text-align:center}
+.hist-row .hs{flex:1;height:7px;background:var(--paper-2);border-radius:99px;overflow:hidden}
+.hist-row .hs i{display:block;height:100%;background:var(--indigo);border-radius:99px}
+.hist-row .hv{font-size:.78rem;color:var(--ink-2);min-width:34px;text-align:right}
+.hist-empty{color:var(--ink-3);font-size:.84rem;text-align:center;padding:40px 20px}
 </style>
 </head>
 <body>
@@ -343,8 +363,20 @@ body{
       </button>
     </div>
     <div class="homefoot">
-      <div id="lastResult" class="last mono"></div>
+      <div id="lastResult" class="last mono" onclick="openHistory()" style="cursor:pointer"></div>
       <div class="copy">ENGLISH LAB · MEASUREMENT ≠ CERTIFICATION</div>
+    </div>
+  </section>
+
+  <!-- ================= HISTORY ================= -->
+  <section id="history" class="screen">
+    <div class="testbar">
+      <button class="back" onclick="goHome()" aria-label="戻る">‹</button>
+      <div class="rev-title jp">測定の推移</div>
+    </div>
+    <div class="hist-list" id="histList"></div>
+    <div class="actions">
+      <button class="btn ghost jp" onclick="goHome()">ホームに戻る</button>
     </div>
   </section>
 
@@ -366,6 +398,7 @@ body{
       <button class="navbtn jp" id="prevBtn" onclick="goPrev()">‹ 戻る</button>
       <button class="navbtn next jp" id="nextBtn" onclick="goNext()">次へ ›</button>
     </div>
+    <button class="unans jp" id="unansHint" style="display:none" onclick="jumpUnanswered()"></button>
   </section>
 
   <!-- ================= RESULT ================= -->
@@ -408,6 +441,7 @@ body{
 
     <div class="actions">
       <button class="btn ghost jp" onclick="openReview()">解答を振り返る（正誤）</button>
+      <button class="btn ghost jp" id="copyBtn" onclick="copyResult()">結果をコピーして共有</button>
       <button class="btn primary jp" onclick="startTest('reading')">もう一度分析する</button>
       <button class="btn ghost jp" onclick="goHome()">ホームに戻る</button>
     </div>
@@ -745,7 +779,7 @@ const SEED_WORD=[
  {sec:'word',cefr:'C1',head:'wary',a:0,c:['用心深い','軽率な','無関心な','大胆な']},
 ];
 const SEED_IDIOM=[
- // ---- A2 ----
+ // ---- A2 (12) ----
  {sec:'idiom',cefr:'A2',head:'get up',a:0,c:['起きる','座る','転ぶ','立ち止まる']},
  {sec:'idiom',cefr:'A2',head:'look for ~',a:0,c:['~を探す','~を見つける','~を見る','~を失う']},
  {sec:'idiom',cefr:'A2',head:'wait for ~',a:0,c:['~を待つ','~を追う','~を呼ぶ','~を逃す']},
@@ -754,7 +788,11 @@ const SEED_IDIOM=[
  {sec:'idiom',cefr:'A2',head:'get on ~',a:0,c:['~に乗る','~から降りる','~を降ろす','~を運転する']},
  {sec:'idiom',cefr:'A2',head:'a lot of ~',a:0,c:['たくさんの~','少しの~','全くない~','半分の~']},
  {sec:'idiom',cefr:'A2',head:'come from ~',a:0,c:['~出身である','~へ向かう','~を訪れる','~に住む']},
- // ---- B1 ----
+ {sec:'idiom',cefr:'A2',head:'sit down',a:0,c:['座る','立ち上がる','横になる','歩き回る']},
+ {sec:'idiom',cefr:'A2',head:'come back',a:0,c:['戻ってくる','出発する','立ち去る','到着する']},
+ {sec:'idiom',cefr:'A2',head:'go out',a:0,c:['外出する','帰宅する','起床する','就寝する']},
+ {sec:'idiom',cefr:'A2',head:'listen to ~',a:0,c:['~を聞く','~を話す','~を見る','~を書く']},
+ // ---- B1 (12) ----
  {sec:'idiom',cefr:'B1',head:'give up',a:0,c:['あきらめる','始める','続ける','手伝う']},
  {sec:'idiom',cefr:'B1',head:'run out of ~',a:0,c:['~を使い果たす','~を補充する','~を節約する','~を買いだめする']},
  {sec:'idiom',cefr:'B1',head:'take part in ~',a:0,c:['~に参加する','~を欠席する','~を主催する','~を観戦する']},
@@ -763,7 +801,11 @@ const SEED_IDIOM=[
  {sec:'idiom',cefr:'B1',head:'come up with ~',a:0,c:['~を思いつく','~を実行する','~を却下する','~を見逃す']},
  {sec:'idiom',cefr:'B1',head:'figure out ~',a:0,c:['~を理解する・解明する','~を見落とす','~を隠す','~を複雑にする']},
  {sec:'idiom',cefr:'B1',head:'get along with ~',a:0,c:['~と仲良くやる','~と争う','~を避ける','~を無視する']},
- // ---- B2 ----
+ {sec:'idiom',cefr:'B1',head:'find out ~',a:0,c:['~を知る・突き止める','~を隠す','~を忘れる','~を疑う']},
+ {sec:'idiom',cefr:'B1',head:'pick up ~',a:0,c:['~を拾う・車で迎えに行く','~を落とす','~を見送る','~を捨てる']},
+ {sec:'idiom',cefr:'B1',head:'set up ~',a:0,c:['~を設立する・設置する','~を解散する','~を撤去する','~を延期する']},
+ {sec:'idiom',cefr:'B1',head:'go on',a:0,c:['続く・起こる','終わる','止まる','戻る']},
+ // ---- B2 (12) ----
  {sec:'idiom',cefr:'B2',head:'put up with ~',a:0,c:['~を我慢する','~を楽しむ','~を取り除く','~を引き起こす']},
  {sec:'idiom',cefr:'B2',head:'get the hang of ~',a:0,c:['~のコツをつかむ','~をあきらめる','~を忘れる','~を教える']},
  {sec:'idiom',cefr:'B2',head:'run into ~',a:0,c:['~に偶然出会う','~を避ける','~を探す','~と別れる']},
@@ -772,7 +814,11 @@ const SEED_IDIOM=[
  {sec:'idiom',cefr:'B2',head:'come across ~',a:0,c:['~に偶然出くわす','~を計画する','~を隠す','~を作り出す']},
  {sec:'idiom',cefr:'B2',head:'look down on ~',a:0,c:['~を見下す','~を尊敬する','~を心配する','~を頼る']},
  {sec:'idiom',cefr:'B2',head:'bring about ~',a:0,c:['~を引き起こす','~を防ぐ','~を遅らせる','~を予測する']},
- // ---- C1 ----
+ {sec:'idiom',cefr:'B2',head:'make up for ~',a:0,c:['~を埋め合わせる','~を悪化させる','~を無視する','~を繰り返す']},
+ {sec:'idiom',cefr:'B2',head:'look into ~',a:0,c:['~を調査する','~を放置する','~を否定する','~を提出する']},
+ {sec:'idiom',cefr:'B2',head:'take over ~',a:0,c:['~を引き継ぐ','~を手放す','~を拒否する','~を分割する']},
+ {sec:'idiom',cefr:'B2',head:'break down',a:0,c:['故障する','完成する','加速する','改善する']},
+ // ---- C1 (12) ----
  {sec:'idiom',cefr:'C1',head:'cut corners',a:0,c:['手を抜く','丁寧にやる','近道を探す','角を曲がる']},
  {sec:'idiom',cefr:'C1',head:'beat around the bush',a:0,c:['遠回しに言う','率直に言う','大声で言う','繰り返す']},
  {sec:'idiom',cefr:'C1',head:'bite the bullet',a:0,c:['覚悟して立ち向かう','先延ばしにする','逃げ出す','助けを求める']},
@@ -781,9 +827,13 @@ const SEED_IDIOM=[
  {sec:'idiom',cefr:'C1',head:'break the ice',a:0,c:['場の緊張をほぐす','議論を始める','秘密を明かす','関係を壊す']},
  {sec:'idiom',cefr:'C1',head:'sit on the fence',a:0,c:['どっちつかずの態度をとる','明確に決める','積極的に関わる','率直に述べる']},
  {sec:'idiom',cefr:'C1',head:'let the cat out of the bag',a:0,c:['うっかり秘密を漏らす','秘密を守る','嘘をつく','冗談を言う']},
+ {sec:'idiom',cefr:'C1',head:'hit the nail on the head',a:0,c:['核心を突く','的外れなことを言う','話をそらす','大げさに言う']},
+ {sec:'idiom',cefr:'C1',head:'once in a blue moon',a:0,c:['ごく稀に','頻繁に','定期的に','決して~ない']},
+ {sec:'idiom',cefr:'C1',head:'spill the beans',a:0,c:['秘密を漏らす','食事をこぼす','無駄遣いする','責任を逃れる']},
+ {sec:'idiom',cefr:'C1',head:'burn the midnight oil',a:0,c:['夜遅くまで働く・勉強する','早寝早起きする','怠ける','浪費する']},
 ];
 const SEED_GRAMMAR=[
- // ---- A2 ----
+ // ---- A2 (12) ----
  {sec:'grammar',cefr:'A2',type:'時制',sent:'She ___ to school every day.',a:0,c:['goes','go','going','gone']},
  {sec:'grammar',cefr:'A2',type:'一致',sent:'There ___ two books on the table.',a:0,c:['are','is','be','am']},
  {sec:'grammar',cefr:'A2',type:'前置詞',sent:'He is good ___ tennis.',a:0,c:['at','on','in','to']},
@@ -794,7 +844,9 @@ const SEED_GRAMMAR=[
  {sec:'grammar',cefr:'A2',type:'比較',sent:'This box is ___ than that one.',a:0,c:['heavier','heavy','heaviest','more heavy']},
  {sec:'grammar',cefr:'A2',type:'助動詞',sent:'___ you help me, please?',a:0,c:['Can','Do','Are','Is']},
  {sec:'grammar',cefr:'A2',type:'語法',sent:"I'm interested ___ music.",a:0,c:['in','on','at','for']},
- // ---- B1 ----
+ {sec:'grammar',cefr:'A2',type:'代名詞',sent:'This bag is ___.',a:0,c:['mine','me','my','I']},
+ {sec:'grammar',cefr:'A2',type:'疑問詞',sent:'___ do you go to school? — By bus.',a:0,c:['How','What','Where','Who']},
+ // ---- B1 (15) ----
  {sec:'grammar',cefr:'B1',type:'仮定法',sent:'If it ___ tomorrow, we will stay home.',a:0,c:['rains','will rain','rained','rain']},
  {sec:'grammar',cefr:'B1',type:'前置詞',sent:'She has studied English ___ three years.',a:0,c:['for','since','during','from']},
  {sec:'grammar',cefr:'B1',type:'関係詞',sent:'The book ___ I bought is interesting.',a:0,c:['which','who','where','whose']},
@@ -807,7 +859,10 @@ const SEED_GRAMMAR=[
  {sec:'grammar',cefr:'B1',type:'接続詞',sent:'Take an umbrella ___ it rains.',a:0,c:['in case','in spite','as long','even so']},
  {sec:'grammar',cefr:'B1',type:'比較',sent:'She runs as ___ as her brother.',a:0,c:['fast','faster','fastest','more fast']},
  {sec:'grammar',cefr:'B1',type:'受動態',sent:'This song ___ by many people.',a:0,c:['is loved','loves','loving','love']},
- // ---- B2 ----
+ {sec:'grammar',cefr:'B1',type:'受動態',sent:'English ___ in many countries.',a:0,c:['is spoken','speaks','is speaking','spoke']},
+ {sec:'grammar',cefr:'B1',type:'準動詞',sent:'Would you mind ___ the window?',a:0,c:['opening','to open','open','opened']},
+ {sec:'grammar',cefr:'B1',type:'数量詞',sent:"There isn't ___ milk left.",a:0,c:['much','many','few','a few']},
+ // ---- B2 (16) ----
  {sec:'grammar',cefr:'B2',type:'完了時制',sent:'By the time we arrived, the movie ___.',a:0,c:['had already started','already started','has started','starts']},
  {sec:'grammar',cefr:'B2',type:'仮定法',sent:"I'd rather you ___ smoke here.",a:0,c:["didn't",'not',"won't","don't"]},
  {sec:'grammar',cefr:'B2',type:'仮定法',sent:'It is high time we ___ home.',a:0,c:['went','go','have gone','going']},
@@ -820,15 +875,25 @@ const SEED_GRAMMAR=[
  {sec:'grammar',cefr:'B2',type:'準動詞',sent:'On his way home, he stopped ___ some milk.',a:0,c:['to buy','buying','buy','bought']},
  {sec:'grammar',cefr:'B2',type:'助動詞',sent:'She ___ be tired; she worked all day.',a:0,c:['must','can','need','will']},
  {sec:'grammar',cefr:'B2',type:'比較',sent:"This is by far ___ movie I've seen.",a:0,c:['the best','best','better','the better']},
- // ---- C1 ----
+ {sec:'grammar',cefr:'B2',type:'前置詞',sent:'She succeeded ___ passing the exam.',a:0,c:['in','on','at','to']},
+ {sec:'grammar',cefr:'B2',type:'語法',sent:'I am used ___ up early.',a:0,c:['to getting','to get','getting','get']},
+ {sec:'grammar',cefr:'B2',type:'時制',sent:'This time tomorrow, I ___ on a beach.',a:0,c:['will be lying','lie','will lie','am lying']},
+ {sec:'grammar',cefr:'B2',type:'相関接続',sent:'___ he nor his brother knows the truth.',a:0,c:['Neither','Either','Both','Not']},
+ // ---- C1 (14) ----
  {sec:'grammar',cefr:'C1',type:'倒置強調',sent:'Not only ___ late, but he also forgot it.',a:0,c:['was he','he was','did he','he did']},
  {sec:'grammar',cefr:'C1',type:'倒置強調',sent:'Little ___ that she was being watched.',a:0,c:['did she know','she knew','she did know','knew she']},
  {sec:'grammar',cefr:'C1',type:'倒置強調',sent:'Seldom ___ such dedication.',a:0,c:['have I seen','I have seen','I saw','did I saw']},
- {sec:'grammar',cefr:'C1',type:'倒置強調',sent:'___ as it may seem, the theory holds.',a:0,c:['Strange','Strangely','However strange','As strange']},
+ {sec:'grammar',cefr:'C1',type:'譲歩構文',sent:'___ as it may seem, the theory holds.',a:0,c:['Strange','Strangely','However strange','As strange']},
  {sec:'grammar',cefr:'C1',type:'仮定法',sent:'Were it not ___ your help, we would fail.',a:0,c:['for','of','to','with']},
  {sec:'grammar',cefr:'C1',type:'倒置強調',sent:'No sooner ___ he arrived than it began to rain.',a:0,c:['had','did','has','was']},
  {sec:'grammar',cefr:'C1',type:'分詞',sent:'___ finished his work, he went home.',a:0,c:['Having','Have','Had','To have']},
  {sec:'grammar',cefr:'C1',type:'関係詞',sent:'The house ___ which he lives is old.',a:0,c:['in','on','at','for']},
+ {sec:'grammar',cefr:'C1',type:'仮定法',sent:'Had I known, I ___ have come earlier.',a:0,c:['would','will','shall','may']},
+ {sec:'grammar',cefr:'C1',type:'準動詞',sent:'There is no point ___ about it.',a:0,c:['in worrying','to worry','worry','worried']},
+ {sec:'grammar',cefr:'C1',type:'譲歩構文',sent:'___ he says, do not believe him.',a:0,c:['Whatever','However','Whoever','Whichever']},
+ {sec:'grammar',cefr:'C1',type:'分詞',sent:'All things ___, the event was a success.',a:0,c:['considered','considering','to consider','consider']},
+ {sec:'grammar',cefr:'C1',type:'関係詞',sent:'He gave me some advice, ___ was very helpful.',a:0,c:['which','that','what','it']},
+ {sec:'grammar',cefr:'C1',type:'語法',sent:'The results are contingent ___ further testing.',a:0,c:['on','of','to','with']},
 ];
 POOL={word:SEED_WORD.slice(),idiom:SEED_IDIOM.slice(),grammar:SEED_GRAMMAR.slice()};
 
@@ -853,24 +918,36 @@ function shuffleChoices(q){ // 選択肢の並びをランダム化し正解inde
   const order=shuffle(q.c.map((t,i)=>({t,i})));
   return {...q, c:order.map(o=>o.t), a:order.findIndex(o=>o.i===q.a)};
 }
+/* 出題済み記憶: 直近に出た問題を避けて毎回新鮮に（プール枯渇時は自動リセット） */
+function getSeen(){ try{return new Set(JSON.parse(localStorage.getItem('englishlab_seen')||'[]'));}catch(e){return new Set();} }
+function markSeen(qs){ try{
+  const s=[...getSeen(), ...qs.map(qKey)];
+  localStorage.setItem('englishlab_seen', JSON.stringify(s.slice(-260)));
+}catch(e){} }
+const qKey=q=> q.sec+':'+(q.head||q.sent);
+function preferUnseen(list,n,seen){
+  const un=list.filter(q=>!seen.has(qKey(q))), sn=list.filter(q=>seen.has(qKey(q)));
+  return [...un,...sn].slice(0,n);
+}
 function pickPerBand(pool,plan){
-  const out=[];
+  const seen=getSeen(); const out=[];
   for(const band of BAND_ORDER){
     if(!plan[band]) continue;
     const inBand=shuffle(pool.filter(q=>q.cefr===band));
-    out.push(...inBand.slice(0,plan[band]));
+    out.push(...preferUnseen(inBand,plan[band],seen));
   }
   return shuffle(out);
 }
-// 文法は種類(type)が偏らないよう、帯ごとに種類分散で抽出
+// 文法は種類(type)が偏らないよう、帯ごとに種類分散で抽出（未出題優先）
 function pickGrammar(pool,plan){
-  const out=[];
+  const seen=getSeen(); const out=[];
   for(const band of BAND_ORDER){
     if(!plan[band]) continue;
-    const inBand=shuffle(pool.filter(q=>q.cefr===band));
-    const seen=new Set(), chosen=[];
-    for(const q of inBand){ if(chosen.length>=plan[band])break; if(!seen.has(q.type)){seen.add(q.type);chosen.push(q);} }
-    for(const q of inBand){ if(chosen.length>=plan[band])break; if(!chosen.includes(q))chosen.push(q); } // 不足分を補充
+    const ordered=[...shuffle(pool.filter(q=>q.cefr===band&&!seen.has(qKey(q)))),
+                   ...shuffle(pool.filter(q=>q.cefr===band&&seen.has(qKey(q))))];
+    const seenTypes=new Set(), chosen=[];
+    for(const q of ordered){ if(chosen.length>=plan[band])break; if(!seenTypes.has(q.type)){seenTypes.add(q.type);chosen.push(q);} }
+    for(const q of ordered){ if(chosen.length>=plan[band])break; if(!chosen.includes(q))chosen.push(q); }
     out.push(...chosen);
   }
   return shuffle(out);
@@ -892,7 +969,7 @@ function buildQuiz(){
 }
 let runMode='reading', fullReading=null, fullSpeaking=null;
 function launchReading(){
-  quiz=buildQuiz(); idx=0; answers=new Array(quiz.length);
+  quiz=buildQuiz(); markSeen(quiz); idx=0; answers=new Array(quiz.length);
   show('test'); t0=Date.now(); startTimer(); renderQ();
 }
 function startTest(){ runMode='reading'; launchReading(); }
@@ -945,6 +1022,17 @@ function updateNav(){
     nextB.textContent='次へ ›'; nextB.className='navbtn next jp';
     nextB.disabled = !answers[idx];
   }
+  // 未回答ヒント（終盤で未回答が残っている時だけ表示、タップでジャンプ）
+  const hint=document.getElementById('unansHint');
+  const un=[]; answers.forEach((a,i)=>{ if(!a) un.push(i); });
+  if(un.length && (last || un[0]<idx)){
+    hint.style.display='block';
+    hint.textContent=`未回答が ${un.length}問（Q${un[0]+1}〜）— タップで移動`;
+  } else hint.style.display='none';
+}
+function jumpUnanswered(){
+  const i=answers.findIndex(a=>!a);
+  if(i>=0){ idx=i; renderQ(); }
 }
 function pick(ci,isDK){
   const firstTime=!answers[idx];
@@ -1057,10 +1145,9 @@ function finish(){
   const elapsed=Math.floor((Date.now()-t0)/1000);
   const res=grade();
   renderResult(res,elapsed);
-  saveResult(res,elapsed);
   fullReading=res;
   if(runMode==='full'){ show('speak_intro'); }
-  else { show('result'); window.scrollTo(0,0); }
+  else { saveResult(res,elapsed); show('result'); window.scrollTo(0,0); }
 }
 const fmtLv=lv=> lv==='Pre-A1' ? 'Pre-A1' : (lv&&lv.endsWith('-') ? lv.slice(0,-1)+'手前' : lv);
 const posPct=cont=>Math.max(3,Math.min(97,((cont-1)/4)*100)); // 1..5 → 0..100
@@ -1110,9 +1197,14 @@ function renderResult(res,elapsed){
   },140));
 
   const wsk=res.skills[res.weak];
+  // 文法の弱い「型」を特定（誤答・わからないの多い type 上位）
+  const typeMiss={};
+  answers.forEach(a=>{ if(a&&a.sec==='grammar'&&!a.correct&&a.type){ typeMiss[a.type]=(typeMiss[a.type]||0)+1; } });
+  const weakTypes=Object.entries(typeMiss).sort((x,y)=>y[1]-x[1]).slice(0,2).map(([t,n])=>`${t}(${n})`);
   document.getElementById('findText').innerHTML=
     `いちばんの伸びしろは <span class="w">${names[res.weak]}（${fmtLv(wsk.level)}）</span>。`+
-    `ここを1段引き上げると、総合CEFRが最も動きます。`;
+    `ここを1段引き上げると、総合CEFRが最も動きます。`+
+    (weakTypes.length?` 文法では <span class="w">${weakTypes.join('・')}</span> の失点が目立ちます。`:'');
   const note=document.getElementById('findNote');
   note.textContent = res.dkTotal>0
     ? `「わからない」= ${res.dkTotal}問 · 推測を排した測定です`
@@ -1125,15 +1217,37 @@ function renderResult(res,elapsed){
     e.innerHTML=`<div class="num mono">${i+1}</div><div class="st jp"><b>${st.t}</b><small>${st.d}</small></div>`;
     steps.appendChild(e);
   });
+  lastReadingResult=res;
+}
+
+/* ---------- 結果コピー（友達と共有） ---------- */
+let lastReadingResult=null;
+function copyResult(){
+  const r=lastReadingResult; if(!r) return;
+  const n={word:'語彙',idiom:'熟語',grammar:'文法'};
+  const lines=[
+    `English Lab — Reading 分析結果`,
+    `総合CEFR: ${r.ovBand}${r.ovPlus?'+':''} / Score ${r.score} / 正答率 ${r.acc}%`,
+    ...['word','idiom','grammar'].map(k=>`${n[k]}: ${fmtLv(r.skills[k].level)}${r.skills[k].plus?'+':''} (${Math.round(r.skills[k].acc*100)}%)`),
+  ];
+  const text=lines.join('\n');
+  const done=()=>{const b=document.getElementById('copyBtn'); if(b){b.textContent='コピーしました ✓'; setTimeout(()=>b.textContent='結果をコピーして共有',1400);}};
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done)); }
+  else fallbackCopy(text,done);
+}
+function fallbackCopy(text,done){
+  const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+  ta.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(ta); done();
 }
 
 /* ---------- persistence ---------- */
-function saveResult(res,sec){
+function saveResult(res,sec){ saveRecord({kind:runMode==='full'?'F':'R', band:res.ovBand, plus:res.ovPlus, score:res.score, acc:res.acc, sec}); }
+function saveRecord(rec){
   try{
-    const rec={date:Date.now(),band:res.ovBand,plus:res.ovPlus,score:res.score,acc:res.acc,sec};
+    rec.date=Date.now();
     localStorage.setItem('englishlab_last',JSON.stringify(rec));
     const h=JSON.parse(localStorage.getItem('englishlab_hist')||'[]');
-    h.push(rec); localStorage.setItem('englishlab_hist',JSON.stringify(h.slice(-30)));
+    h.push(rec); localStorage.setItem('englishlab_hist',JSON.stringify(h.slice(-40)));
   }catch(e){}
 }
 function showLast(){
@@ -1142,8 +1256,28 @@ function showLast(){
     if(!r)return;
     const el=document.getElementById('lastResult'); el.style.display='block';
     const d=new Date(r.date);
-    el.innerHTML=`PREV · <b>${r.band}${r.plus?'+':''}</b> · SCORE <b>${r.score}</b> · ${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    el.innerHTML=`PREV · <b>${r.band}${r.plus?'+':''}</b> · SCORE <b>${r.score}</b> · ${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} <span style="float:right;color:var(--indigo)">推移 ›</span>`;
   }catch(e){}
+}
+
+/* ---------- 履歴（推移） ---------- */
+function openHistory(){
+  let h=[]; try{h=JSON.parse(localStorage.getItem('englishlab_hist')||'[]');}catch(e){}
+  const list=document.getElementById('histList'); list.innerHTML='';
+  if(!h.length){ list.innerHTML='<div class="hist-empty jp">まだ記録がありません。分析を受けると、ここに推移が残ります。</div>'; }
+  const KIND={R:'READING',S:'SPEAKING',F:'FULL'};
+  [...h].reverse().forEach(r=>{
+    const d=new Date(r.date);
+    const el=document.createElement('div'); el.className='hist-row';
+    el.innerHTML=`
+      <span class="hd mono">${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}</span>
+      <span class="hk mono">${KIND[r.kind||'R']||'READING'}</span>
+      <span class="hb mono">${r.band}${r.plus?'+':''}</span>
+      <span class="hs"><i style="width:${Math.max(3,Math.min(100,(r.score||0)/10))}%"></i></span>
+      <span class="hv mono">${r.score}</span>`;
+    list.appendChild(el);
+  });
+  show('history');
 }
 
 /* =========================================================
@@ -1178,7 +1312,7 @@ const SPEAK_DATA=[
 ];
 
 let spTasks=[], spIdx=0, spResults=[], spDemo=false;
-let mediaRecorder=null, audioChunks=[], recStream=null, recStart=0, recTimer=null, recBlob=null, recURL=null;
+let mediaRecorder=null, audioChunks=[], recStream=null, recStart=0, recTimer=null, recBlob=null, recURL=null, spPrepCd=null;
 
 function startSpeaking(){ runMode='speaking'; spDemo=false; show('speak_intro'); }
 function beginSpeaking(){
@@ -1187,7 +1321,7 @@ function beginSpeaking(){
 }
 function quitSpeaking(){ if(confirm('Speaking分析をやめてホームに戻りますか？')){ cleanupRec(); goHome(); } }
 function cleanupRec(){
-  clearInterval(recTimer);
+  clearInterval(recTimer); clearInterval(spPrepCd);
   if(recStream){ recStream.getTracks().forEach(t=>t.stop()); recStream=null; }
   if(recURL){ URL.revokeObjectURL(recURL); recURL=null; }
 }
@@ -1214,6 +1348,7 @@ function renderTask(){
     <div id="spAfter"></div>`;
 
   const btn=document.getElementById('spRecBtn');
+  clearInterval(spPrepCd);
   if(t.type==='retell'){
     // 準備時間: passage表示 → カウントダウン → 隠して録音可能に
     btn.disabled=true;
@@ -1221,10 +1356,10 @@ function renderTask(){
     const prepEl=document.getElementById('spPrep');
     prepEl.innerHTML=`覚える時間: <b>${left}</b> 秒`;
     document.getElementById('spRecState').textContent='まず英文を覚えてください';
-    const cd=setInterval(()=>{
+    spPrepCd=setInterval(()=>{
       left--;
       if(left<=0){
-        clearInterval(cd);
+        clearInterval(spPrepCd);
         const p=document.getElementById('spPassage');
         if(p){ p.parentElement.innerHTML='<div class="hidden-msg jp">覚えた内容を、自分の言葉で話してください</div>'; }
         prepEl.textContent='';
@@ -1408,6 +1543,7 @@ function renderSpeakReport(d){
   });
 
   if(runMode==='full'){ renderFull(); return; }
+  saveRecord({kind:'S', band:d.overallCEFR||'—', plus:false, score:d.overallScore||0, acc:null, sec:null});
   show('speak_report'); window.scrollTo(0,0);
 }
 
@@ -1468,6 +1604,7 @@ function renderFull(){
     ? `${s.summary}（Reading ${r.ovBand} / Speaking ${s.overallCEFR}）`
     : `Reading ${r.ovBand} / Speaking ${s.overallCEFR}。受容と産出のバランスから学習を組み立てましょう。`;
 
+  saveRecord({kind:'F', band:combBand, plus:combPlus, score:Math.round(((r.score||0)+(s.overallScore||0))/2), acc:r.acc, sec:null});
   show('full'); window.scrollTo(0,0);
 }
 
