@@ -15,6 +15,13 @@ const STT_MODEL = "whisper-large-v3-turbo"; // 高速・低コスト。精度優
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
   if (!process.env.GROQ_API_KEY) return res.status(500).json({ error: "GROQ_API_KEY not set" });
+  // 任意の保護: ALLOWED_ORIGIN を設定すると、そのオリジン以外からの呼び出しを拒否
+  // (例: https://english-lab.sproutenglish.jp)。未設定なら制限なし。
+  const allowed = process.env.ALLOWED_ORIGIN;
+  if (allowed) {
+    const origin = req.headers.origin || req.headers.referer || "";
+    if (!origin.startsWith(allowed)) return res.status(403).json({ error: "forbidden" });
+  }
 
   try {
     const { audio, mime } = req.body || {};
